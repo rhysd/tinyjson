@@ -1,9 +1,11 @@
 [package]
 name = "tinyjson"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["rhysd <lin90162@yahoo.co.jp>"]
 description = "Tiny simple JSON parser/generator"
+license = "MIT"
 license-file = "LICENSE.txt"
 repository = "https://github.com/rhysd/tinyjson.git"
+keywords = ["json"]
 
 [dependencies]
