@@ -34,16 +34,16 @@ pub struct JsonParser<'a> {
     col: usize,
 }
 
-pub impl<'a> JsonParser<'a> {
-    fn for_string(s: &String) -> JsonParser {
+impl<'a> JsonParser<'a> {
+    pub fn for_string(s: &String) -> JsonParser {
         JsonParser::for_chars(s.chars())
     }
 
-    fn for_str(s: &str) -> JsonParser {
+    pub fn for_str(s: &str) -> JsonParser {
         JsonParser::for_chars(s.chars())
     }
 
-    fn for_chars(c: Chars) -> JsonParser {
+    pub fn for_chars(c: Chars) -> JsonParser {
         JsonParser {chars: c.peekable(), line: 0, col: 0}
     }
 
@@ -101,7 +101,7 @@ pub impl<'a> JsonParser<'a> {
         }
     }
 
-    fn parse_object(&mut self) -> JsonParseResult {
+    pub fn parse_object(&mut self) -> JsonParseResult {
         if try!(self.next()) != '{' {
             return self.err(String::from("Object must starts with '{'"));
         }
@@ -136,7 +136,7 @@ pub impl<'a> JsonParser<'a> {
         Ok(JsonValue::Object(m))
     }
 
-    fn parse_array(&mut self) -> JsonParseResult {
+    pub fn parse_array(&mut self) -> JsonParseResult {
         if try!(self.next()) != '[' {
             return self.err(String::from("Array must starts with '['"));
         }
@@ -191,7 +191,7 @@ pub impl<'a> JsonParser<'a> {
         )
     }
 
-    fn parse_string(&mut self) -> JsonParseResult {
+    pub fn parse_string(&mut self) -> JsonParseResult {
         if try!(self.next()) != '"' {
             return self.err(String::from("String must starts with double quote"));
         }
@@ -229,28 +229,28 @@ pub impl<'a> JsonParser<'a> {
         None
     }
 
-    fn parse_null(&mut self) -> JsonParseResult {
+    pub fn parse_null(&mut self) -> JsonParseResult {
         match self.parse_name("null") {
             Some(err) => Err(err),
             None => Ok(JsonValue::Null),
         }
     }
 
-    fn parse_true(&mut self) -> JsonParseResult {
+    pub fn parse_true(&mut self) -> JsonParseResult {
         match self.parse_name("true") {
             Some(err) => Err(err),
             None => Ok(JsonValue::Boolean(true)),
         }
     }
 
-    fn parse_false(&mut self) -> JsonParseResult {
+    pub fn parse_false(&mut self) -> JsonParseResult {
         match self.parse_name("false") {
             Some(err) => Err(err),
             None => Ok(JsonValue::Boolean(false)),
         }
     }
 
-    fn parse_number(&mut self) -> JsonParseResult {
+    pub fn parse_number(&mut self) -> JsonParseResult {
         let mut c = try!(self.next());
         let negative = match c {
             '-' => {
@@ -284,7 +284,7 @@ pub impl<'a> JsonParser<'a> {
         Ok(JsonValue::Number(if negative { -n } else { n }))
     }
 
-    fn parse(&mut self) -> JsonParseResult {
+    pub fn parse(&mut self) -> JsonParseResult {
         match try!(self.peek()) {
             '1'...'9' | '-' => self.parse_number(),
             '"' => self.parse_string(),
