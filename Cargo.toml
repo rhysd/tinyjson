@@ -1,0 +1,9 @@
+[package]
+name = "tinyjson"
+version = "0.0.1"
+authors = ["rhysd <lin90162@yahoo.co.jp>"]
+description = "Tiny simple JSON parser/generator"
+license-file = "LICENSE.txt"
+repository = "https://github.com/rhysd/tinyjson.git"
+
+[dependencies]
