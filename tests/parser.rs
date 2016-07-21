@@ -1,6 +1,6 @@
 extern crate tinyjson;
 
-use tinyjson::JsonParser;
+use tinyjson::*;
 
 #[test]
 fn it_works() {
@@ -16,7 +16,7 @@ fn it_works() {
             "unicode": "\u2764"
           }
         "#;
-        let mut p = JsonParser::for_str(s);
+        let mut p = make_str_parser(s);
         let parsed = p.parse();
         assert!(parsed.is_ok(), "Failed to parse: {:?}", parsed);
     }

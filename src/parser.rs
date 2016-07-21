@@ -20,25 +20,13 @@ impl JsonParseError {
 
 pub type JsonParseResult = Result<JsonValue, JsonParseError>;
 
-pub struct JsonParser<'a> {
-    chars: Peekable<Chars<'a>>,
+pub struct JsonParser<I> where I: Iterator<Item=char> {
+    chars: Peekable<I>,
     line: usize,
     col: usize,
 }
 
-impl<'a> JsonParser<'a> {
-    pub fn for_string(s: &String) -> JsonParser {
-        JsonParser::for_chars(s.chars())
-    }
-
-    pub fn for_str(s: &str) -> JsonParser {
-        JsonParser::for_chars(s.chars())
-    }
-
-    pub fn for_chars(c: Chars) -> JsonParser {
-        JsonParser {chars: c.peekable(), line: 0, col: 0}
-    }
-
+impl<I> JsonParser<I> where I: Iterator<Item=char> {
     fn err(&self, msg: String) -> JsonParseResult {
         Err(self.error(msg))
     }
@@ -290,3 +278,27 @@ impl<'a> JsonParser<'a> {
     }
 }
 
+pub fn make_parser<I>(it: I) -> JsonParser<I> where I: Iterator<Item=char> {
+    JsonParser {chars: it.peekable(), line: 0, col: 0}
+}
+
+pub fn make_str_parser(s: &str) -> JsonParser<Chars> {
+    make_parser(s.chars())
+}
+
+pub fn make_string_parser(s: &String) -> JsonParser<Chars> {
+    make_parser(s.chars())
+}
+
+pub fn parse<I>(it: I) -> JsonParseResult where I: Iterator<Item=char> {
+    let mut p = make_parser(it);
+    p.parse()
+}
+
+pub fn parse_str(s: &str) -> JsonParseResult {
+    parse(s.chars())
+}
+
+pub fn parse_string(s: &String) -> JsonParseResult {
+    parse(s.chars())
+}
