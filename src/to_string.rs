@@ -5,8 +5,9 @@ fn generate_string(s: &String) -> String {
 }
 
 fn generate_array(v: &Vec<JsonValue>) -> String {
-    let mut s = v.iter().fold(String::new(), |acc, e| acc + &generate(e) + ",");
+    let mut s = v.iter().fold('['.to_string(), |acc, e| acc + &generate(e) + ",");
     s.pop();  // Remove trailing comma
+    s.push(']');
     s
 }
 
