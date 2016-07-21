@@ -3,15 +3,7 @@ use std::str::Chars;
 use std::iter::Peekable;
 use std::char;
 
-#[derive(Debug)]
-pub enum JsonValue {
-    Number(f64),
-    Boolean(bool),
-    String(String),
-    Null,
-    Array(Vec<JsonValue>),
-    Object(HashMap<String, JsonValue>),
-}
+use JsonValue;
 
 #[derive(Debug)]
 pub struct JsonParseError {
