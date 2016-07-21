@@ -14,18 +14,54 @@ Goals:
 
 ### Parse JSON
 
-TODO
+```rust
+use tinyjson::parser::parse_str;
+
+let s = r#"
+    {
+        "bool": true,
+        "arr": [1, null, "test"],
+        "nested": {
+            "blah": false,
+            "blahblah": 3.14
+        },
+        "unicode": "\u2764"
+    }
+"#;
+
+let parsed = parse_str(s);
+println!("Parsed: {}", parsed);
+```
 
 ### Generate JSON
 
-TODO
+```rust
+use tinyjson::parser::parse_str;
+use tinyjson::to_string;
+
+let s = r#"
+    {
+        "bool": true,
+        "arr": [1, null, "test"],
+        "nested": {
+            "blah": false,
+            "blahblah": 3.14
+        },
+        "unicode": "\u2764"
+    }
+"#;
+
+let parsed = parse_str(s);
+let str = parsed.to_string();
+println!("{}", str);
+```
 
 ## TODO
 
 - [x] Parser
-- [ ] Generator
+- [x] Generator
 - [ ] Read from file descriptor
-- [ ] Comparing `JsonValue`
+- [ ] Equality of `JsonValue`
 - [ ] Index access to `JsonValue`
 - [ ] Tests
 
