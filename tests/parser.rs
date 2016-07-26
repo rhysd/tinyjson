@@ -79,3 +79,11 @@ fn test_parse_failed() {
         assert!(parsed.is_err(), "Incorrectly parse succeeded: {:?}: {:?}", json, parsed);
     });
 }
+
+#[test]
+fn test_parse_passed() {
+    each_pass_case(|json| {
+        let parsed = parse_string(&json);
+        assert!(parsed.is_ok(), "Incorrectly parse failed: {:?}: {:?}", json, parsed);
+    });
+}
