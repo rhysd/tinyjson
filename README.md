@@ -14,6 +14,8 @@ Goals:
 
 ### Parse JSON
 
+String is parsed to `JsonValue` struct.
+
 ```rust
 use tinyjson::parser::parse_str;
 
