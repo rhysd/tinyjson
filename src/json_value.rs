@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::ops::Index;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum JsonValue {
     Number(f64),
     Boolean(bool),
@@ -39,3 +39,4 @@ impl Index<String> for JsonValue {
         &self[&*key]
     }
 }
+
