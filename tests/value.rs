@@ -57,9 +57,13 @@ fn test_equality_edge_cases() {
 #[test]
 fn test_access_with_index_operator() {
     let parsed = must_parse(STR_OK);
-    // XXX: To be refactored
-    match parsed["bool"] {
-        JsonValue::Boolean(ref b) => assert!(b),
-        ref v => panic!("true is expected but actually {:?}", v),
-    }
+    assert!(parsed["bool"] == JsonValue::Boolean(true));
+    assert!(parsed["nested"]["blahblah"] == JsonValue::Number(3.14));
+}
+
+#[test]
+#[should_panic]
+fn test_access_not_exist_value() {
+    let parsed = must_parse(STR_OK);
+    &parsed["unknown key"]["not exist key"];
 }
