@@ -67,3 +67,11 @@ fn test_access_not_exist_value() {
     let parsed = must_parse(STR_OK);
     &parsed["unknown key"]["not exist key"];
 }
+
+#[test]
+fn test_get() {
+    let parsed = must_parse(STR_OK);
+    let ref v = parsed["nested"]["blah"];
+    let b: &bool = v.get().expect("Expected boolean value");
+    assert!(!b);
+}
