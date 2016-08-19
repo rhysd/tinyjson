@@ -1,0 +1,8 @@
+language: rust
+rust: stable
+script:
+    - cargo test --verbose
+notifications:
+    email:
+        on_success: never
+        on_failure: change

@@ -1,7 +1,8 @@
 tinyjson
 ========
+[![Build Status](https://travis-ci.org/rhysd/tinyjson.svg?branch=master)](https://travis-ci.org/rhysd/tinyjson)
 
-[tinyjson](https://github.com/rhysd/tinyjson) is a library to parse/generate JSON format document.
+[tinyjson](https://crates.io/crates/tinyjson) is a library to parse/generate JSON format document.
 
 Goals:
 
@@ -158,6 +159,10 @@ println!("{}", str);
 - [x] Equality of `JsonValue`
 - [x] Index access to `JsonValue` (array, object)
 - [x] Tests
+
+## Repository
+
+https://github.com/rhysd/tinyjson
 
 ## License
 
