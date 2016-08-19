@@ -290,15 +290,32 @@ pub fn make_string_parser(s: &String) -> JsonParser<Chars> {
     make_parser(s.chars())
 }
 
-pub fn parse<I>(it: I) -> JsonParseResult where I: Iterator<Item=char> {
-    let mut p = make_parser(it);
-    p.parse()
+pub trait ParsableAsJson {
+    fn parse_as_json(&self) -> JsonParseResult;
 }
 
-pub fn parse_str(s: &str) -> JsonParseResult {
-    parse(s.chars())
+impl<'a> ParsableAsJson for &'a String {
+    fn parse_as_json(&self) -> JsonParseResult {
+        let mut p = make_parser(self.chars());
+        p.parse()
+    }
 }
 
-pub fn parse_string(s: &String) -> JsonParseResult {
-    parse(s.chars())
+impl<'a> ParsableAsJson for &'a str {
+    fn parse_as_json(&self) -> JsonParseResult {
+        let mut p = make_parser(self.chars());
+        p.parse()
+    }
 }
+
+pub fn parse<T: ParsableAsJson>(parsable: T) -> JsonParseResult {
+    parsable.parse_as_json()
+}
+
+pub fn must_parse<T: ParsableAsJson>(parsable: T) -> JsonValue {
+    match parse(parsable) {
+        Ok(json) => json,
+        Err(err) => panic!("tinyjson: Parse failed: {:?}", err),
+    }
+}
+

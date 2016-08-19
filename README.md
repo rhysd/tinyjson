@@ -17,7 +17,7 @@ Goals:
 String is parsed to `JsonValue` struct.
 
 ```rust
-use tinyjson::parser::parse_str;
+use tinyjson::parser::parse;
 
 let s = r#"
     {
@@ -31,14 +31,14 @@ let s = r#"
     }
 "#;
 
-let parsed = parse_str(s);
-println!("Parsed: {}", parsed);
+let parsed = parse(s);
+println!("Parsed: {:?}", parsed);
 ```
 
 ### Generate JSON
 
 ```rust
-use tinyjson::parser::parse_str;
+use tinyjson::parser::parse;
 use tinyjson::to_string;
 
 let s = r#"
@@ -53,7 +53,7 @@ let s = r#"
     }
 "#;
 
-let parsed = parse_str(s);
+let parsed = parse(s);
 let str = parsed.to_string();
 println!("{}", str);
 ```
@@ -63,9 +63,9 @@ println!("{}", str);
 - [x] Parser
 - [x] Generator
 - [ ] Read from file descriptor
-- [ ] Equality of `JsonValue`
-- [ ] Index access to `JsonValue`
-- [ ] Tests
+- [x] Equality of `JsonValue`
+- [x] Index access to `JsonValue`
+- [x] Tests
 
 ## License
 

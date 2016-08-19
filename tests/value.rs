@@ -13,13 +13,6 @@ const STR_OK: &'static str = r#"
           }
         "#;
 
-fn must_parse(s: &'static str) -> JsonValue {
-    match parse_str(s) {
-        Ok(j) => j,
-        Err(e) => panic!("Parse failed: {:?}", e),
-    }
-}
-
 #[test]
 fn test_equality_property() {
     let a = must_parse(STR_OK);

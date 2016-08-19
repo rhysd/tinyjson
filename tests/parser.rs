@@ -52,30 +52,22 @@ const STR_OK: &'static str = r#"
 #[test]
 fn test_parse_str() {
     let s = STR_OK;
-    let parsed = parse_str(s);
+    let parsed = parse(s);
     assert!(parsed.is_ok(), "Failed to parse: {:?}", parsed);
 }
 
 #[test]
 fn test_parse_string() {
     let s = STR_OK.to_string();
-    let parsed = parse_string(&s);
+    let parsed = parse(&s);
     assert!(parsed.is_ok(), "Failed to parse: {:?}", parsed);
 }
 
 /*
 #[test]
-fn test_parse_iterator() {
-    let vec = STR_OK.chars().collect::<Vec<char>>();
-    let parsed = parse(vec.itervec.iter());
-    assert!(parsed.is_ok(), "Failed to parse: {:?}", parsed);
-}
-*/
-
-#[test]
 fn test_parse_failed() {
     each_fail_case(|json| {
-        let parsed = parse_string(&json);
+        let parsed = parse(&json);
         assert!(parsed.is_err(), "Incorrectly parse succeeded: {:?}: {:?}", json, parsed);
     });
 }
@@ -83,7 +75,8 @@ fn test_parse_failed() {
 #[test]
 fn test_parse_passed() {
     each_pass_case(|json| {
-        let parsed = parse_string(&json);
+        let parsed = parse(&json);
         assert!(parsed.is_ok(), "Incorrectly parse failed: {:?}: {:?}", json, parsed);
     });
 }
+*/
