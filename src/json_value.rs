@@ -75,6 +75,48 @@ impl JsonValue {
     pub fn get<T: FromJsonValue>(&self) -> Option<&T> {
         T::from_json_value(self)
     }
+
+    pub fn is_bool(&self) -> bool {
+        match self {
+            &JsonValue::Boolean(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_number(&self) -> bool {
+        match self {
+            &JsonValue::Number(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_string(&self) -> bool {
+        match self {
+            &JsonValue::String(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_null(&self) -> bool {
+        match self {
+            &JsonValue::Null => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_array(&self) -> bool {
+        match self {
+            &JsonValue::Array(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_object(&self) -> bool {
+        match self {
+            &JsonValue::Object(_) => true,
+            _ => false,
+        }
+    }
 }
 
 impl<'a> Index<&'a str> for JsonValue {
