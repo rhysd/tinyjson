@@ -125,7 +125,7 @@ impl<'a> Index<&'a str> for JsonValue {
     fn index<'b>(&'b self, key: &'a str) -> &'b JsonValue {
         let obj = match self {
             &JsonValue::Object(ref o) => o,
-            _ => panic!("Attempted to access an object with key '{}' but actually it was {:?}", key, self),
+            _ => panic!("Attempted to access to an object with key '{}' but actually it was {:?}", key, self),
         };
 
         let val = obj.get(key);
@@ -145,6 +145,18 @@ impl Index<String> for JsonValue {
         //   *key  is 'str'
         //   &*key is '&str'
         &self[&*key]
+    }
+}
+
+impl Index<usize> for JsonValue {
+    type Output = JsonValue;
+
+    fn index<'a>(&'a self, i: usize) -> &'a JsonValue {
+        let array = match self {
+            &JsonValue::Array(ref a) => a,
+            _ => panic!("Attempted to access to an array but actually the value was {:?}", self),
+        };
+        &array[i]
     }
 }
 

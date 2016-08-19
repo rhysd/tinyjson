@@ -55,6 +55,14 @@ fn test_access_with_index_operator() {
 }
 
 #[test]
+fn test_access_to_array_element_with_index() {
+    let parsed = must_parse(STR_OK);
+    assert!(parsed["arr"][0] == JsonValue::Number(1.0));
+    assert!(parsed["arr"][1] == JsonValue::Null);
+    assert!(parsed["arr"][2] == JsonValue::String("test".to_string()));
+}
+
+#[test]
 #[should_panic]
 fn test_access_not_exist_value() {
     let parsed = must_parse(STR_OK);
