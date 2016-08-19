@@ -122,8 +122,8 @@ let json = tinyjson::parser::parse(r#"
 "#);
 
 assert!(json["num"].is_number());
-assert!(json["num"].is_array());
-assert!(json["num"].is_null());
+assert!(json["array"].is_array());
+assert!(json["null"].is_null());
 ```
 
 ### Generate JSON
