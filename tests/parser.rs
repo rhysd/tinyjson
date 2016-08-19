@@ -51,8 +51,7 @@ const STR_OK: &'static str = r#"
 
 #[test]
 fn test_parse_str() {
-    let s = STR_OK;
-    let parsed = parse(s);
+    let parsed = parse(STR_OK);
     assert!(parsed.is_ok(), "Failed to parse: {:?}", parsed);
 }
 
@@ -61,6 +60,16 @@ fn test_parse_string() {
     let s = STR_OK.to_string();
     let parsed = parse(&s);
     assert!(parsed.is_ok(), "Failed to parse: {:?}", parsed);
+}
+
+#[test]
+fn test_reference_lifetime() {
+    let f = || {
+        let s = r#"{"test": 42}"#.to_string();
+        parse(&s)
+        // Lifetime of s ends here
+    };
+    assert!(f().is_ok());
 }
 
 /*
