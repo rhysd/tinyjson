@@ -74,4 +74,7 @@ fn test_get() {
     let ref v = parsed["nested"]["blah"];
     let b: &bool = v.get().expect("Expected boolean value");
     assert!(!b);
+    let null = JsonValue::Null;
+    let n: Option<&()> = null.get();
+    assert!(n.is_some());
 }

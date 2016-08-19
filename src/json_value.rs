@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 use std::ops::Index;
 
-pub struct Null;
-pub static NULL: Null = Null;
+static NULL: () = ();
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum JsonValue {
@@ -45,8 +44,8 @@ impl FromJsonValue for String {
     }
 }
 
-impl FromJsonValue for Null {
-    fn from_json_value(v: &JsonValue) -> Option<&Null> {
+impl FromJsonValue for () {
+    fn from_json_value(v: &JsonValue) -> Option<&()> {
         match v {
             &JsonValue::Null => Some(&NULL),
             _ => None,
