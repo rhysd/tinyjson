@@ -1,5 +1,7 @@
 tinyjson
 ========
+
+[![version](https://img.shields.io/crates/v/tinyjson.svg)](https://crates.io/crates/tinyjson)
 [![Build Status](https://travis-ci.org/rhysd/tinyjson.svg?branch=master)](https://travis-ci.org/rhysd/tinyjson)
 
 [tinyjson](https://crates.io/crates/tinyjson) is a library to parse/generate JSON format document.
