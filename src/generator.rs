@@ -1,7 +1,6 @@
 use crate::JsonValue;
 use std::collections::HashMap;
 use std::fmt;
-use std::string::ToString;
 
 #[derive(Debug)]
 pub struct JsonGenerateError {

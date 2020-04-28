@@ -1,5 +1,6 @@
-use std::collections::HashMap;
 use crate::generator::{stringify, JsonGenerateResult};
+use std::collections::HashMap;
+use std::convert::TryInto;
 use std::ops::Index;
 
 const NULL: () = ();
@@ -155,5 +156,74 @@ impl Index<usize> for JsonValue {
             ),
         };
         &array[i]
+    }
+}
+
+#[derive(Debug)]
+pub struct UnexpectedValue(JsonValue);
+
+impl TryInto<f64> for JsonValue {
+    type Error = UnexpectedValue;
+
+    fn try_into(self) -> Result<f64, UnexpectedValue> {
+        match self {
+            JsonValue::Number(n) => Ok(n),
+            v => Err(UnexpectedValue(v)),
+        }
+    }
+}
+
+impl TryInto<bool> for JsonValue {
+    type Error = UnexpectedValue;
+
+    fn try_into(self) -> Result<bool, UnexpectedValue> {
+        match self {
+            JsonValue::Boolean(b) => Ok(b),
+            v => Err(UnexpectedValue(v)),
+        }
+    }
+}
+
+impl TryInto<String> for JsonValue {
+    type Error = UnexpectedValue;
+
+    fn try_into(self) -> Result<String, UnexpectedValue> {
+        match self {
+            JsonValue::String(s) => Ok(s),
+            v => Err(UnexpectedValue(v)),
+        }
+    }
+}
+
+impl TryInto<()> for JsonValue {
+    type Error = UnexpectedValue;
+
+    fn try_into(self) -> Result<(), UnexpectedValue> {
+        match self {
+            JsonValue::Null => Ok(()),
+            v => Err(UnexpectedValue(v)),
+        }
+    }
+}
+
+impl TryInto<Vec<JsonValue>> for JsonValue {
+    type Error = UnexpectedValue;
+
+    fn try_into(self) -> Result<Vec<JsonValue>, UnexpectedValue> {
+        match self {
+            JsonValue::Array(a) => Ok(a),
+            v => Err(UnexpectedValue(v)),
+        }
+    }
+}
+
+impl TryInto<HashMap<String, JsonValue>> for JsonValue {
+    type Error = UnexpectedValue;
+
+    fn try_into(self) -> Result<HashMap<String, JsonValue>, UnexpectedValue> {
+        match self {
+            JsonValue::Object(o) => Ok(o),
+            v => Err(UnexpectedValue(v)),
+        }
     }
 }

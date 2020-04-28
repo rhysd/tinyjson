@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use tinyjson::*;
 
 const STR_OK: &'static str = r#"
@@ -105,4 +106,31 @@ fn test_get() {
     let null = JsonValue::Null;
     let n: Option<&()> = null.get();
     assert!(n.is_some());
+}
+
+#[test]
+fn test_try_into() {
+    use std::convert::TryInto;
+
+    let v: f64 = JsonValue::Number(1.0).try_into().unwrap();
+    assert_eq!(v, 1.0);
+
+    let v: bool = JsonValue::Boolean(false).try_into().unwrap();
+    assert_eq!(v, false);
+
+    let v: String = JsonValue::String("hello".to_string()).try_into().unwrap();
+    assert_eq!(&v, "hello");
+
+    let _: () = JsonValue::Null.try_into().unwrap();
+
+    let v: Vec<_> = JsonValue::Array(vec![JsonValue::Null, JsonValue::Number(3.0)])
+        .try_into()
+        .unwrap();
+    assert_eq!(&v, &[JsonValue::Null, JsonValue::Number(3.0)]);
+
+    let mut m = HashMap::new();
+    m.insert("a".to_string(), JsonValue::Null);
+    m.insert("b".to_string(), JsonValue::Boolean(true));
+    let v: HashMap<_, _> = JsonValue::Object(m.clone()).try_into().unwrap();
+    assert_eq!(v, m);
 }
