@@ -1,50 +1,45 @@
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::f64;
-use tinyjson::{JsonGenerateResult, JsonValue};
+use tinyjson::JsonValue;
 
 #[test]
 fn test_number() {
-    let s: String = JsonValue::Number(0.0).try_into().unwrap();
-    assert_eq!(&s, "0");
-    let s: String = JsonValue::Number(10.0).try_into().unwrap();
-    assert_eq!(&s, "10");
-    let s: String = JsonValue::Number(3.14).try_into().unwrap();
-    assert_eq!(&s, "3.14");
-    let s: String = JsonValue::Number(-10.0).try_into().unwrap();
-    assert_eq!(&s, "-10");
+    assert_eq!(&JsonValue::Number(0.0).stringify().unwrap(), "0");
+    assert_eq!(&JsonValue::Number(10.0).stringify().unwrap(), "10");
+    assert_eq!(&JsonValue::Number(3.14).stringify().unwrap(), "3.14");
+    assert_eq!(&JsonValue::Number(-10.0).stringify().unwrap(), "-10");
 }
 
 #[test]
 fn test_invalid_number() {
-    let r: JsonGenerateResult = JsonValue::Number(f64::INFINITY).try_into();
-    assert!(r.is_err());
-    let r: JsonGenerateResult = JsonValue::Number(f64::NEG_INFINITY).try_into();
-    assert!(r.is_err());
-    let r: JsonGenerateResult = JsonValue::Number(f64::NAN).try_into();
-    assert!(r.is_err());
+    assert!(JsonValue::Number(f64::INFINITY).stringify().is_err());
+    assert!(JsonValue::Number(f64::NEG_INFINITY).stringify().is_err());
+    assert!(JsonValue::Number(f64::NAN).stringify().is_err());
 }
 
 #[test]
 fn test_string() {
-    let s: String = JsonValue::String("hello".to_string()).try_into().unwrap();
-    assert_eq!(&s, r#""hello""#);
-    let s: String = JsonValue::String("\n\r\t\\\"".to_string())
-        .try_into()
-        .unwrap();
-    assert_eq!(&s, r#""\n\r\t\\\"""#);
+    assert_eq!(
+        &JsonValue::String("hello".to_string()).stringify().unwrap(),
+        r#""hello""#
+    );
+    assert_eq!(
+        &JsonValue::String("\n\r\t\\\"".to_string())
+            .stringify()
+            .unwrap(),
+        r#""\n\r\t\\\"""#
+    );
 }
 
 #[test]
 fn test_bool() {
-    let s: String = JsonValue::Boolean(true).try_into().unwrap();
-    assert_eq!(&s, "true");
+    assert_eq!(&JsonValue::Boolean(true).stringify().unwrap(), "true");
 }
 
 #[test]
 fn test_null() {
-    let s: String = JsonValue::Null.try_into().unwrap();
-    assert_eq!(&s, "null");
+    assert_eq!(&JsonValue::Null.stringify().unwrap(), "null");
 }
 
 #[test]
@@ -54,7 +49,7 @@ fn test_array() {
         JsonValue::Boolean(false),
         JsonValue::Null,
     ]);
-    let s: String = v.try_into().unwrap();
+    let s: String = v.stringify().unwrap();
     assert_eq!(&s, "[1,false,null]");
 }
 
@@ -65,7 +60,7 @@ fn test_bject() {
     m.insert("bar".to_string(), JsonValue::Boolean(false));
     m.insert("piyo".to_string(), JsonValue::Null);
     let v = JsonValue::Object(m);
-    let s: String = v.try_into().unwrap();
+    let s: String = v.stringify().unwrap();
     assert!(s.starts_with('{'));
     assert!(s.contains(r#""foo":1"#));
     assert!(s.contains(r#""bar":false"#));
