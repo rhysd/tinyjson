@@ -36,6 +36,7 @@ fn quote(s: &str) -> String {
             '\r' => to.push_str("\\r"),
             '\t' => to.push_str("\\t"),
             '"' => to.push_str("\\\""),
+            c if c.is_control() => to.push_str(&format!("\\u{:04x}", c as u32)),
             c => to.push(c),
         }
     }

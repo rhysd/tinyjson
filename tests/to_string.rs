@@ -29,6 +29,10 @@ fn test_string() {
             .unwrap(),
         r#""\n\r\t\\\"""#
     );
+    assert_eq!(
+        &JsonValue::String("\0\x1b".to_string()).stringify().unwrap(),
+        r#""\u0000\u001b""#
+    );
 }
 
 #[test]
