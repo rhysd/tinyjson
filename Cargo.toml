@@ -5,16 +5,20 @@ edition = "2018"
 authors = ["rhysd <lin90162@yahoo.co.jp>"]
 description = "Tiny simple JSON parser/generator"
 license = "MIT"
-repository = "https://github.com/rhysd/tinyjson.git"
-keywords = ["json"]
+readme = "README.md"
+homepage = "https://github.com/rhysd/tinyjson"
+repository = "https://github.com/rhysd/tinyjson"
+keywords = ["json", "parser", "generator"]
+categories = ["encoding", "parsing"]
 
 include = [
   "Cargo.toml",
   "README.md",
   "LICENSE.txt",
-  ".gitignore",
   "src/*.rs",
-  "tests/*.rs"
 ]
+
+[badges]
+maintenance = { status = "passively-maintained" }
 
 [dependencies]
