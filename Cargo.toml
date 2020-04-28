@@ -1,6 +1,6 @@
 [package]
 name = "tinyjson"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2018"
 authors = ["rhysd <lin90162@yahoo.co.jp>"]
 description = "Tiny simple JSON parser/generator"
