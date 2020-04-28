@@ -56,7 +56,18 @@ let v = match json {
 };
 ```
 
-But JSON is a tree structure and it's boring to write nested `match` statement.  So `JsonValue` meets `std::ops::Index` trait in order to access to its value quickly.
+Each JSON types correspond to Rust types as follows:
+
+| JSON    | Rust                         |
+|---------|------------------------------|
+| Number  | `f64`                        |
+| Boolean | `bool`                       |
+| String  | `String`                     |
+| Null    | `()`                         |
+| Array   | `Vec<JsonValue>`             |
+| Object  | `HashMap<String, JsonValue>` |
+
+JSON is a tree structure and it's boring to write nested `match` statement.  So `JsonValue` implements `std::ops::Index` trait in order to access to its value quickly.
 
 ```rust
 let complicated_json: tinyjson::JsonValue = r#"
@@ -78,14 +89,17 @@ let target_value = complicated_json["foo"]["bar"][0]["target"];
 println!("{:?}", target_value); // => JsonValue::Number(42.0)
 ```
 
-Index access with `str` key is available when the value is an object.  And Index access with `usize` is available when the value is an array.  They return the `&JsonValue` value if target value was found.
+Index access with `&str` key is available when the value is an object.  And Index access with `usize` is available when the value is an array.  They return the `&JsonValue` value if target value was found.  When the value for key or the element of index was not found, it will call `panic!`.
 
-When the value for key or the element of index was not found, it will call `panic!`.
+`get()` method is provided to dereference the `enum` value (e.g. `JsonValue::Number(4.2)` -> `4.2`).
 
-Additionally, `get()` method is provided to dereference the `enum` value (e.g. `JsonValue::Number(4.2)` -> `4.2`).
+`JsonValue` implements [`TryInto`](https://doc.rust-lang.org/std/convert/trait.TryInto.html). It can convert `JsonValue` into inner value.
 
 ```rust
-let json: tinyjson::JsonValue = r#"
+use tinyjson::JsonValue;
+use std::convert::TryInto;
+
+let json: JsonValue = r#"
 {
   "num": 42,
   "array": [1, true, "aaa"],
@@ -93,11 +107,15 @@ let json: tinyjson::JsonValue = r#"
 }
 "#.parse().unwrap();
 
+// Refer inner value
 let ref num: f64 = json["num"].get().expect("Number value");
-let ref arr: Vec<JsonValue> = json["array"].get().expect("Array value");
+let ref arr: Vec<_> = json["array"].get().expect("Array value");
 let ref null: () = json["null"].get().expect("Null value");
 
-print!("{}, {:?}", num, arr);
+// Move out inner value using try_into()
+let num: f64 = json["num"].try_into().expect("Number value");
+let arr: Vec<_> = json["array"].try_into().expect("Array value");
+let null: () = json["null"].try_into().expect("Null value");
 ```
 
 `get()` method returns its dereferenced raw value.  It returns `Option<&T>` (`T` is corresponding value that you expected).  If `None` is returned, it means its type mismatched with your expected one.  Which type `get()` should dereference is inferred from how the returned value will be handled.  So you need not to specify it explicitly.
