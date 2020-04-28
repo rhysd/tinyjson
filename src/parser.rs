@@ -170,6 +170,7 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
     fn parse_special_char(&mut self) -> Result<char, JsonParseError> {
         Ok(match self.next_no_skip()? {
             '\\' => '\\',
+            '/' => '/',
             '"' => '"',
             'b' => '\u{0008}',
             'f' => '\u{000c}',
