@@ -20,7 +20,7 @@ pub trait FromJsonValue {
 impl FromJsonValue for f64 {
     fn from_json_value(v: &JsonValue) -> Option<&f64> {
         match v {
-            JsonValue::Number(ref n) => Some(n),
+            JsonValue::Number(n) => Some(n),
             _ => None,
         }
     }
@@ -29,7 +29,7 @@ impl FromJsonValue for f64 {
 impl FromJsonValue for bool {
     fn from_json_value(v: &JsonValue) -> Option<&bool> {
         match v {
-            JsonValue::Boolean(ref b) => Some(b),
+            JsonValue::Boolean(b) => Some(b),
             _ => None,
         }
     }
@@ -38,7 +38,7 @@ impl FromJsonValue for bool {
 impl FromJsonValue for String {
     fn from_json_value(v: &JsonValue) -> Option<&String> {
         match v {
-            JsonValue::String(ref s) => Some(s),
+            JsonValue::String(s) => Some(s),
             _ => None,
         }
     }
@@ -56,7 +56,7 @@ impl FromJsonValue for () {
 impl FromJsonValue for Vec<JsonValue> {
     fn from_json_value(v: &JsonValue) -> Option<&Vec<JsonValue>> {
         match v {
-            JsonValue::Array(ref a) => Some(a),
+            JsonValue::Array(a) => Some(a),
             _ => None,
         }
     }
@@ -65,7 +65,7 @@ impl FromJsonValue for Vec<JsonValue> {
 impl FromJsonValue for HashMap<String, JsonValue> {
     fn from_json_value(v: &JsonValue) -> Option<&HashMap<String, JsonValue>> {
         match v {
-            JsonValue::Object(ref h) => Some(h),
+            JsonValue::Object(h) => Some(h),
             _ => None,
         }
     }
@@ -124,7 +124,7 @@ impl<'a> Index<&'a str> for JsonValue {
 
     fn index(&self, key: &'a str) -> &JsonValue {
         let obj = match self {
-            JsonValue::Object(ref o) => o,
+            JsonValue::Object(o) => o,
             _ => panic!(
                 "Attempted to access to an object with key '{}' but actually it was {:?}",
                 key, self
@@ -143,7 +143,7 @@ impl Index<usize> for JsonValue {
 
     fn index(&self, i: usize) -> &'_ JsonValue {
         let array = match self {
-            JsonValue::Array(ref a) => a,
+            JsonValue::Array(a) => a,
             _ => panic!(
                 "Attempted to access to an array but actually the value was {:?}",
                 self
