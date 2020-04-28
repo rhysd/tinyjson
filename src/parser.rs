@@ -93,10 +93,22 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
         self.unexpected_eof()
     }
 
-    fn next_wo_skip(&mut self) -> Result<char, JsonParseError> {
+    fn next_no_skip(&mut self) -> Result<char, JsonParseError> {
         match self.chars.next() {
             Some(c) => Ok(c),
             None => self.unexpected_eof(),
+        }
+    }
+
+    fn check_string_char(&self, c: char) -> Result<char, JsonParseError> {
+        if c.is_control() {
+            let msg = format!(
+                "String cannot convert control character {}",
+                c.escape_debug(),
+            );
+            Err(self.error(msg))
+        } else {
+            Ok(c)
         }
     }
 
@@ -178,7 +190,7 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
     }
 
     fn parse_special_char(&mut self) -> Result<char, JsonParseError> {
-        Ok(match self.next()? {
+        Ok(match self.next_no_skip()? {
             '\\' => '\\',
             '"' => '"',
             'b' => '\u{0008}',
@@ -200,12 +212,12 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
                     Some(c) => c,
                     None => {
                         return Err(
-                            self.error(format!("Cannot convert \\u{:x} in unicode character", u))
+                            self.error(format!("Cannot convert \\u{:x} into unicode character", u))
                         )
                     }
                 }
             }
-            c => c,
+            c => self.check_string_char(c)?,
         })
     }
 
@@ -216,19 +228,17 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
 
         let mut s = String::new();
         loop {
-            s.push(match self.next_wo_skip()? {
+            s.push(match self.next_no_skip()? {
                 '\\' => self.parse_special_char()?,
-                '"' => break,
-                c => c,
+                '"' => return Ok(JsonValue::String(s)),
+                c => self.check_string_char(c)?,
             });
         }
-
-        Ok(JsonValue::String(s))
     }
 
-    fn parse_name(&mut self, s: &'static str) -> Option<JsonParseError> {
+    fn parse_constant(&mut self, s: &'static str) -> Option<JsonParseError> {
         for c in s.chars() {
-            match self.next_wo_skip() {
+            match self.next_no_skip() {
                 Ok(x) if x != c => {
                     return Some(JsonParseError::new(
                         format!("err while parsing '{}', invalid character '{}' found", s, c),
@@ -244,21 +254,21 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
     }
 
     pub fn parse_null(&mut self) -> JsonParseResult {
-        match self.parse_name("null") {
+        match self.parse_constant("null") {
             Some(err) => Err(err),
             None => Ok(JsonValue::Null),
         }
     }
 
     pub fn parse_true(&mut self) -> JsonParseResult {
-        match self.parse_name("true") {
+        match self.parse_constant("true") {
             Some(err) => Err(err),
             None => Ok(JsonValue::Boolean(true)),
         }
     }
 
     pub fn parse_false(&mut self) -> JsonParseResult {
-        match self.parse_name("false") {
+        match self.parse_constant("false") {
             Some(err) => Err(err),
             None => Ok(JsonValue::Boolean(false)),
         }
