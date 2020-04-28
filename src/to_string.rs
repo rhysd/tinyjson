@@ -1,6 +1,24 @@
 use crate::JsonValue;
 use std::collections::HashMap;
+use std::convert::TryInto;
 use std::string::ToString;
+
+#[derive(Debug)]
+pub struct JsonGenerateError {
+    msg: &'static str,
+}
+
+impl JsonGenerateError {
+    fn new(msg: &'static str) -> Self {
+        JsonGenerateError { msg }
+    }
+
+    pub fn message(&self) -> &str {
+        &self.msg
+    }
+}
+
+pub type JsonGenerateResult = Result<String, JsonGenerateError>;
 
 fn quote(s: &str) -> String {
     let mut to = '"'.to_string();
@@ -19,39 +37,59 @@ fn quote(s: &str) -> String {
     to
 }
 
-fn array(v: &Vec<JsonValue>) -> String {
-    let mut s = v.iter().fold('['.to_string(), |mut acc, e| {
-        acc += &e.to_string();
-        acc.push(',');
-        acc
-    });
-    s.pop(); // Remove trailing comma
-    s.push(']');
-    s
-}
-
-fn object(m: &HashMap<String, JsonValue>) -> String {
-    let mut s = '{'.to_string();
-    for (k, v) in m {
-        s += &quote(k);
-        s.push(':');
-        s += &v.to_string();
-        s.push(',');
+fn array(array: &Vec<JsonValue>) -> JsonGenerateResult {
+    let mut to = '['.to_string();
+    for elem in array.iter() {
+        let s: String = elem.try_into()?;
+        to += &s;
+        to.push(',');
     }
-    s.pop(); // Remove trailing comma
-    s.push('}');
-    s
+    to.pop(); // Remove trailing comma
+    to.push(']');
+    Ok(to)
 }
 
-impl ToString for JsonValue {
-    fn to_string(&self) -> String {
+fn object(m: &HashMap<String, JsonValue>) -> JsonGenerateResult {
+    let mut to = '{'.to_string();
+    for (k, v) in m {
+        to += &quote(k);
+        to.push(':');
+        let s: String = v.try_into()?;
+        to += &s;
+        to.push(',');
+    }
+    to.pop(); // Remove trailing comma
+    to.push('}');
+    Ok(to)
+}
+
+fn number(f: f64) -> JsonGenerateResult {
+    if f.is_infinite() {
+        Err(JsonGenerateError::new("JSON cannot represent inf"))
+    } else if f.is_nan() {
+        Err(JsonGenerateError::new("JSON cannot represent NaN"))
+    } else {
+        Ok(f.to_string())
+    }
+}
+
+impl<'a> TryInto<String> for &'a JsonValue {
+    type Error = JsonGenerateError;
+    fn try_into(self) -> Result<String, Self::Error> {
         match self {
-            JsonValue::Number(n) => n.to_string(),
-            JsonValue::Boolean(b) => b.to_string(),
-            JsonValue::String(s) => quote(s),
-            JsonValue::Null => "null".to_string(),
+            JsonValue::Number(n) => number(*n),
+            JsonValue::Boolean(b) => Ok(b.to_string()),
+            JsonValue::String(s) => Ok(quote(s)),
+            JsonValue::Null => Ok("null".to_string()),
             JsonValue::Array(a) => array(a),
             JsonValue::Object(o) => object(o),
         }
+    }
+}
+
+impl TryInto<String> for JsonValue {
+    type Error = JsonGenerateError;
+    fn try_into(self) -> Result<String, Self::Error> {
+        (&self).try_into()
     }
 }

@@ -21,7 +21,7 @@ Rust stable toolchain (no dependency).
 
 ### Parse JSON
 
-String is parsed to `JsonValue` struct.
+String is parsed to `JsonValue` struct via [`FromStr`](https://doc.rust-lang.org/std/str/trait.FromStr.html).
 
 ```rust
 use tinyjson::JsonValue;
@@ -42,7 +42,7 @@ let parsed: JsonValue = s.parse().unwrap();
 println!("Parsed: {:?}", parsed);
 ```
 
-`tinyjson::parser::parse()` is available for `&String` and `&'a str`.  It parses the target as JSON and creates `tinyjson::JsonValue` object.  It represents tree structure of parsed JSON.  `JsonValue` is an `enum` struct and allocated on stack.  So it doesn't require additional heap allocation.
+`str::parse()` is available.  It parses the target as JSON and creates `tinyjson::JsonValue` object.  It represents tree structure of parsed JSON.  `JsonValue` is an `enum` struct and allocated on stack.  So it doesn't require additional heap allocation.
 
 ### Access to JSON Value
 
@@ -130,11 +130,10 @@ assert!(json["null"].is_null());
 
 ### Generate JSON
 
-`to_string()` method can be used to create JSON string from `JsonValue`.
+`try_into()` method can be used to create JSON string from `JsonValue` since it implements [`TryInto`](https://doc.rust-lang.org/std/convert/trait.TryInto.html).
 
 ```rust
 use tinyjson::JsonValue;
-use tinyjson::to_string;
 
 let s = r#"
     {
@@ -149,7 +148,7 @@ let s = r#"
 "#;
 
 let parsed: JsonValue = s.parse().unwrap();
-let str = parsed.to_string();
+let str: String = parsed.try_into().unwrap();
 println!("{}", str);
 ```
 
