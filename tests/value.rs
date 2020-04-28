@@ -14,63 +14,91 @@ const STR_OK: &'static str = r#"
 
 #[test]
 fn test_equality_property() {
-    let a = must_parse(STR_OK);
-    let b = must_parse(STR_OK);
-    let c = must_parse(STR_OK);
-    assert!(a == a);
+    let a: JsonValue = STR_OK.parse().unwrap();
+    let b: JsonValue = STR_OK.parse().unwrap();
+    let c: JsonValue = STR_OK.parse().unwrap();
+    assert_eq!(a, a);
 
-    assert!(a == b);
-    assert!(b == a);
+    assert_eq!(a, b);
+    assert_eq!(b, a);
 
-    assert!(b == c);
-    assert!(c == a);
+    assert_eq!(b, c);
+    assert_eq!(c, a);
 }
 
 #[test]
 fn test_not_equal() {
-    assert!(must_parse(r#"{}"#) != must_parse(r#"{"foo": 42}"#));
-    assert!(must_parse(r#"{"foo": true}"#) != must_parse(r#"{"foo": 42}"#));
-    assert!(must_parse(r#"{"foo": 21}"#) != must_parse(r#"{"foo": 42}"#));
-    assert!(must_parse(r#"{"bar": 42}"#) != must_parse(r#"{"foo": 42}"#));
-    assert!(must_parse(r#"{"arr": [1, 2, 3]}"#) != must_parse(r#"{"arr": [1, 2]}"#));
-    assert!(must_parse(r#"{"foo": null}"#) != must_parse(r#"{"foo": 42}"#));
-    assert!(must_parse(r#"{"foo": {"bar": 42}}"#) != must_parse(r#"{"foo": {"bar": 21}}"#));
-    assert!(must_parse(r#"{"foo": [{"bar": 42}]}"#) != must_parse(r#"{"foo": [{"baz": 42}]}"#));
+    assert_ne!(
+        r#"{}"#.parse::<JsonValue>().unwrap(),
+        r#"{"foo": 42}"#.parse().unwrap()
+    );
+    assert_ne!(
+        r#"{"foo": true}"#.parse::<JsonValue>().unwrap(),
+        r#"{"foo": 42}"#.parse().unwrap()
+    );
+    assert_ne!(
+        r#"{"foo": 21}"#.parse::<JsonValue>().unwrap(),
+        r#"{"foo": 42}"#.parse().unwrap()
+    );
+    assert_ne!(
+        r#"{"bar": 42}"#.parse::<JsonValue>().unwrap(),
+        r#"{"foo": 42}"#.parse().unwrap()
+    );
+    assert_ne!(
+        r#"{"arr": [1, 2, 3]}"#.parse::<JsonValue>().unwrap(),
+        r#"{"arr": [1, 2]}"#.parse().unwrap()
+    );
+    assert_ne!(
+        r#"{"foo": null}"#.parse::<JsonValue>().unwrap(),
+        r#"{"foo": 42}"#.parse().unwrap()
+    );
+    assert_ne!(
+        r#"{"foo": {"bar": 42}}"#.parse::<JsonValue>().unwrap(),
+        r#"{"foo": {"bar": 21}}"#.parse().unwrap()
+    );
+    assert_ne!(
+        r#"{"foo": [{"bar": 42}]}"#.parse::<JsonValue>().unwrap(),
+        r#"{"foo": [{"baz": 42}]}"#.parse().unwrap()
+    );
 }
 
 #[test]
 fn test_equality_edge_cases() {
-    assert!(must_parse(r#"{}"#) == must_parse(r#"{}"#));
-    assert!(must_parse(r#"{"foo": []}"#) == must_parse(r#"{"foo": []}"#));
-    assert!(must_parse(r#"{"a": null}"#) != must_parse(r#"{}"#));
-    assert!(must_parse(r#"{"foo": [42]}"#) != must_parse(r#"{"foo": []}"#));
+    let v: JsonValue = r#"{}"#.parse().unwrap();
+    assert_eq!(v, v);
+    let v: JsonValue = r#"{"foo": []}"#.parse().unwrap();
+    assert_eq!(v, v);
+    let v: JsonValue = r#"{"a": null}"#.parse().unwrap();
+    assert_ne!(v, r#"{}"#.parse().unwrap());
+    let v: JsonValue = r#"{"foo": [42]}"#.parse().unwrap();
+    assert_ne!(v, r#"{"foo": []}"#.parse().unwrap());
 }
 
 #[test]
 fn test_access_with_index_operator() {
-    let parsed = must_parse(STR_OK);
-    assert!(parsed["bool"] == JsonValue::Boolean(true));
-    assert!(parsed["nested"]["blahblah"] == JsonValue::Number(3.14));
+    let parsed = STR_OK.parse::<JsonValue>().unwrap();
+    assert_eq!(parsed["bool"], JsonValue::Boolean(true));
+    assert_eq!(parsed["nested"]["blahblah"], JsonValue::Number(3.14));
 }
 
 #[test]
 fn test_access_to_array_element_with_index() {
-    let parsed = must_parse(STR_OK);
-    assert!(parsed["arr"][0] == JsonValue::Number(1.0));
-    assert!(parsed["arr"][1] == JsonValue::Null);
-    assert!(parsed["arr"][2] == JsonValue::String("test".to_string()));
+    let parsed = STR_OK.parse::<JsonValue>().unwrap();
+    assert_eq!(parsed["arr"][0], JsonValue::Number(1.0));
+    assert_eq!(parsed["arr"][1], JsonValue::Null);
+    assert_eq!(parsed["arr"][2], JsonValue::String("test".to_string()));
 }
 
 #[test]
 #[should_panic]
 fn test_access_not_exist_value() {
-    let parsed = must_parse(STR_OK);
+    let parsed = STR_OK.parse::<JsonValue>().unwrap();
     &parsed["unknown key"]["not exist key"];
 }
 
 #[test]
 fn test_get() {
-    let parsed = must_parse(STR_OK);
+    let parsed = STR_OK.parse::<JsonValue>().unwrap();
     let ref v = parsed["nested"]["blah"];
     let b: &bool = v.get().expect("Expected boolean value");
     assert!(!b);

@@ -14,7 +14,8 @@ fn json_suite_paths() -> Vec<PathBuf> {
         .collect()
 }
 
-pub fn each_fail_case<Callback>(cb: Callback)
+#[allow(dead_code)]
+fn each_fail_case<Callback>(cb: Callback)
 where
     Callback: Fn(String) -> (),
 {
@@ -30,7 +31,8 @@ where
     }
 }
 
-pub fn each_pass_case<Callback>(cb: Callback)
+#[allow(dead_code)]
+fn each_pass_case<Callback>(cb: Callback)
 where
     Callback: Fn(String) -> (),
 {
@@ -60,14 +62,7 @@ const STR_OK: &'static str = r#"
 
 #[test]
 fn test_parse_str() {
-    let parsed = parse(STR_OK);
-    assert!(parsed.is_ok(), "Failed to parse: {:?}", parsed);
-}
-
-#[test]
-fn test_parse_string() {
-    let s = STR_OK.to_string();
-    let parsed = parse(&s);
+    let parsed: JsonParseResult = STR_OK.parse();
     assert!(parsed.is_ok(), "Failed to parse: {:?}", parsed);
 }
 
@@ -75,7 +70,7 @@ fn test_parse_string() {
 fn test_reference_lifetime() {
     let f = || {
         let s = r#"{"test": 42}"#.to_string();
-        parse(&s)
+        s.parse::<JsonValue>()
         // Lifetime of s ends here
     };
     assert!(f().is_ok());
