@@ -122,7 +122,7 @@ impl JsonValue {
 impl<'a> Index<&'a str> for JsonValue {
     type Output = JsonValue;
 
-    fn index<'b>(&'b self, key: &'a str) -> &'b JsonValue {
+    fn index(&self, key: &'a str) -> &JsonValue {
         let obj = match self {
             JsonValue::Object(ref o) => o,
             _ => panic!(
@@ -131,23 +131,10 @@ impl<'a> Index<&'a str> for JsonValue {
             ),
         };
 
-        let val = obj.get(key);
-        match val {
-            Some(ref json) => json,
+        match obj.get(key) {
+            Some(json) => json,
             None => panic!("Key '{}' was not found in {:?}", key, self),
         }
-    }
-}
-
-impl Index<String> for JsonValue {
-    type Output = JsonValue;
-
-    fn index(&self, key: String) -> &'_ JsonValue {
-        // Note:
-        //   key   is 'String'
-        //   *key  is 'str'
-        //   &*key is '&str'
-        &self[&*key]
     }
 }
 

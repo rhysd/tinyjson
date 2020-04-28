@@ -79,7 +79,7 @@ let target_value = complicated_json["foo"]["bar"][0]["target"];
 println!("{:?}", target_value); // => JsonValue::Number(42.0)
 ```
 
-Index access with `String` or `str` key is available when the value is an object.  And Index access with `usize` is available when the value is an array.  They return the `&JsonValue` value if target value was found.
+Index access with `str` key is available when the value is an object.  And Index access with `usize` is available when the value is an array.  They return the `&JsonValue` value if target value was found.
 
 When the value for key or the element of index was not found, it will call `panic!`.
 
