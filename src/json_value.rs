@@ -19,59 +19,25 @@ pub trait FromJsonValue {
     fn from_json_value(v: &JsonValue) -> Option<&Self>;
 }
 
-impl FromJsonValue for f64 {
-    fn from_json_value(v: &JsonValue) -> Option<&f64> {
-        match v {
-            JsonValue::Number(n) => Some(n),
-            _ => None,
+macro_rules! from_json_value {
+    ($to:ty, $pat:pat => $val:expr) => {
+        impl FromJsonValue for $to {
+            fn from_json_value(v: &JsonValue) -> Option<&$to> {
+                match v {
+                    $pat => Some($val),
+                    _ => None,
+                }
+            }
         }
-    }
+    };
 }
 
-impl FromJsonValue for bool {
-    fn from_json_value(v: &JsonValue) -> Option<&bool> {
-        match v {
-            JsonValue::Boolean(b) => Some(b),
-            _ => None,
-        }
-    }
-}
-
-impl FromJsonValue for String {
-    fn from_json_value(v: &JsonValue) -> Option<&String> {
-        match v {
-            JsonValue::String(s) => Some(s),
-            _ => None,
-        }
-    }
-}
-
-impl FromJsonValue for () {
-    fn from_json_value(v: &JsonValue) -> Option<&()> {
-        match v {
-            JsonValue::Null => Some(&NULL),
-            _ => None,
-        }
-    }
-}
-
-impl FromJsonValue for Vec<JsonValue> {
-    fn from_json_value(v: &JsonValue) -> Option<&Vec<JsonValue>> {
-        match v {
-            JsonValue::Array(a) => Some(a),
-            _ => None,
-        }
-    }
-}
-
-impl FromJsonValue for HashMap<String, JsonValue> {
-    fn from_json_value(v: &JsonValue) -> Option<&HashMap<String, JsonValue>> {
-        match v {
-            JsonValue::Object(h) => Some(h),
-            _ => None,
-        }
-    }
-}
+from_json_value!(f64, JsonValue::Number(n) => n);
+from_json_value!(bool, JsonValue::Boolean(b) => b);
+from_json_value!(String, JsonValue::String(s) => s);
+from_json_value!((), JsonValue::Null => &NULL);
+from_json_value!(Vec<JsonValue>, JsonValue::Array(a) => a);
+from_json_value!(HashMap<String, JsonValue>, JsonValue::Object(h) => h);
 
 impl JsonValue {
     pub fn get<T: FromJsonValue>(&self) -> Option<&T> {
@@ -162,68 +128,24 @@ impl Index<usize> for JsonValue {
 #[derive(Debug)]
 pub struct UnexpectedValue(JsonValue);
 
-impl TryInto<f64> for JsonValue {
-    type Error = UnexpectedValue;
+macro_rules! impl_try_into {
+    ($ty:ty, $pat:pat => $val:expr) => {
+        impl TryInto<$ty> for JsonValue {
+            type Error = UnexpectedValue;
 
-    fn try_into(self) -> Result<f64, UnexpectedValue> {
-        match self {
-            JsonValue::Number(n) => Ok(n),
-            v => Err(UnexpectedValue(v)),
+            fn try_into(self) -> Result<$ty, UnexpectedValue> {
+                match self {
+                    $pat => Ok($val),
+                    v => Err(UnexpectedValue(v)),
+                }
+            }
         }
-    }
+    };
 }
 
-impl TryInto<bool> for JsonValue {
-    type Error = UnexpectedValue;
-
-    fn try_into(self) -> Result<bool, UnexpectedValue> {
-        match self {
-            JsonValue::Boolean(b) => Ok(b),
-            v => Err(UnexpectedValue(v)),
-        }
-    }
-}
-
-impl TryInto<String> for JsonValue {
-    type Error = UnexpectedValue;
-
-    fn try_into(self) -> Result<String, UnexpectedValue> {
-        match self {
-            JsonValue::String(s) => Ok(s),
-            v => Err(UnexpectedValue(v)),
-        }
-    }
-}
-
-impl TryInto<()> for JsonValue {
-    type Error = UnexpectedValue;
-
-    fn try_into(self) -> Result<(), UnexpectedValue> {
-        match self {
-            JsonValue::Null => Ok(()),
-            v => Err(UnexpectedValue(v)),
-        }
-    }
-}
-
-impl TryInto<Vec<JsonValue>> for JsonValue {
-    type Error = UnexpectedValue;
-
-    fn try_into(self) -> Result<Vec<JsonValue>, UnexpectedValue> {
-        match self {
-            JsonValue::Array(a) => Ok(a),
-            v => Err(UnexpectedValue(v)),
-        }
-    }
-}
-
-impl TryInto<HashMap<String, JsonValue>> for JsonValue {
-    type Error = UnexpectedValue;
-
-    fn try_into(self) -> Result<HashMap<String, JsonValue>, UnexpectedValue> {
-        match self {
-            JsonValue::Object(o) => Ok(o),
-            v => Err(UnexpectedValue(v)),
-        }
-    }
-}
+impl_try_into!(f64, JsonValue::Number(n) => n);
+impl_try_into!(bool, JsonValue::Boolean(b) => b);
+impl_try_into!(String, JsonValue::String(s) => s);
+impl_try_into!((), JsonValue::Null => ());
+impl_try_into!(Vec<JsonValue>, JsonValue::Array(a) => a);
+impl_try_into!(HashMap<String, JsonValue>, JsonValue::Object(o) => o);
