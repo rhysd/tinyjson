@@ -1,6 +1,7 @@
 use crate::JsonValue;
 use std::collections::HashMap;
 use std::convert::TryInto;
+use std::fmt;
 use std::string::ToString;
 
 #[derive(Debug)]
@@ -15,6 +16,12 @@ impl JsonGenerateError {
 
     pub fn message(&self) -> &str {
         &self.msg
+    }
+}
+
+impl fmt::Display for JsonGenerateError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Generate error: {}", &self.msg)
     }
 }
 

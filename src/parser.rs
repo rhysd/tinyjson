@@ -1,5 +1,6 @@
 use std::char;
 use std::collections::HashMap;
+use std::fmt;
 use std::iter::Peekable;
 use std::str::FromStr;
 
@@ -15,6 +16,16 @@ pub struct JsonParseError {
 impl JsonParseError {
     fn new(msg: String, line: usize, col: usize) -> JsonParseError {
         JsonParseError { msg, line, col }
+    }
+}
+
+impl fmt::Display for JsonParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Parse error at line:{}, col:{}: {}",
+            self.line, self.col, &self.msg,
+        )
     }
 }
 
