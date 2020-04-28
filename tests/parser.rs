@@ -15,9 +15,14 @@ fn json_suite_paths() -> Vec<PathBuf> {
         .collect()
 }
 
-pub fn each_fail_case<Callback>(cb: Callback) where Callback: Fn(String) -> () {
+pub fn each_fail_case<Callback>(cb: Callback)
+where
+    Callback: Fn(String) -> (),
+{
     let paths = json_suite_paths();
-    let failed_cases = paths.iter().filter(|p| p.to_str().unwrap().contains("fail"));
+    let failed_cases = paths
+        .iter()
+        .filter(|p| p.to_str().unwrap().contains("fail"));
     for failed in failed_cases {
         let mut f = fs::File::open(failed.to_str().unwrap()).expect("Failed to open file");
         let mut buf = String::new();
@@ -26,9 +31,14 @@ pub fn each_fail_case<Callback>(cb: Callback) where Callback: Fn(String) -> () {
     }
 }
 
-pub fn each_pass_case<Callback>(cb: Callback) where Callback: Fn(String) -> () {
+pub fn each_pass_case<Callback>(cb: Callback)
+where
+    Callback: Fn(String) -> (),
+{
     let paths = json_suite_paths();
-    let failed_cases = paths.iter().filter(|p| p.to_str().unwrap().contains("pass"));
+    let failed_cases = paths
+        .iter()
+        .filter(|p| p.to_str().unwrap().contains("pass"));
     for failed in failed_cases {
         let mut f = fs::File::open(failed.to_str().unwrap()).expect("Failed to open file");
         let mut buf = String::new();

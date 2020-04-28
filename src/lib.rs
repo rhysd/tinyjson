@@ -1,5 +1,5 @@
-pub use parser::*;
 pub use json_value::JsonValue;
+pub use parser::*;
 
-mod parser;
 mod json_value;
+mod parser;
