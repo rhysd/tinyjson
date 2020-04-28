@@ -14,11 +14,7 @@ pub struct JsonParseError {
 
 impl JsonParseError {
     fn new(msg: String, line: usize, col: usize) -> JsonParseError {
-        JsonParseError {
-            msg: msg,
-            line: line,
-            col: col,
-        }
+        JsonParseError { msg, line, col }
     }
 }
 
@@ -55,20 +51,15 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
     }
 
     fn peek(&mut self) -> Result<char, JsonParseError> {
-        loop {
-            match self.chars.peek() {
-                Some(c) => {
-                    if !c.is_whitespace() {
-                        return Ok(*c);
-                    }
-                    if *c == '\n' {
-                        self.col = 0;
-                        self.line += 1;
-                    } else {
-                        self.col += 1;
-                    }
-                }
-                None => break,
+        while let Some(c) = self.chars.peek() {
+            if !c.is_whitespace() {
+                return Ok(*c);
+            }
+            if *c == '\n' {
+                self.col = 0;
+                self.line += 1;
+            } else {
+                self.col += 1;
             }
             self.chars.next();
         }
@@ -272,25 +263,20 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
 
         let mut saw_dot = false;
         let mut s = String::new();
-        loop {
-            let d = match self.chars.peek() {
-                Some(x) => *x,
-                None => break,
-            };
-
+        while let Some(d) = self.chars.peek() {
             s.push(match d {
                 '.' => {
                     saw_dot = true;
-                    d
+                    *d
                 }
-                '0'..='9' | 'e' | 'E' | '-' | '+' => d,
+                '0'..='9' | 'e' | 'E' | '-' | '+' => *d,
                 _ => break,
             });
             self.chars.next().unwrap();
         }
 
         if !saw_dot && s.starts_with('0') && s.len() > 1 {
-            return self.err(format!("Integer cannot start with 0"));
+            return self.err("Integer cannot start with 0".to_string());
         }
 
         let n: f64 = match s.parse() {

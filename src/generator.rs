@@ -38,7 +38,7 @@ fn quote(s: &str) -> String {
     to
 }
 
-fn array(array: &Vec<JsonValue>) -> JsonGenerateResult {
+fn array(array: &[JsonValue]) -> JsonGenerateResult {
     let mut to = '['.to_string();
     for elem in array.iter() {
         let s: String = elem.try_into()?;

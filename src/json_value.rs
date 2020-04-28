@@ -20,7 +20,7 @@ pub trait FromJsonValue {
 impl FromJsonValue for f64 {
     fn from_json_value(v: &JsonValue) -> Option<&f64> {
         match v {
-            &JsonValue::Number(ref n) => Some(n),
+            JsonValue::Number(ref n) => Some(n),
             _ => None,
         }
     }
@@ -29,7 +29,7 @@ impl FromJsonValue for f64 {
 impl FromJsonValue for bool {
     fn from_json_value(v: &JsonValue) -> Option<&bool> {
         match v {
-            &JsonValue::Boolean(ref b) => Some(b),
+            JsonValue::Boolean(ref b) => Some(b),
             _ => None,
         }
     }
@@ -38,7 +38,7 @@ impl FromJsonValue for bool {
 impl FromJsonValue for String {
     fn from_json_value(v: &JsonValue) -> Option<&String> {
         match v {
-            &JsonValue::String(ref s) => Some(s),
+            JsonValue::String(ref s) => Some(s),
             _ => None,
         }
     }
@@ -47,7 +47,7 @@ impl FromJsonValue for String {
 impl FromJsonValue for () {
     fn from_json_value(v: &JsonValue) -> Option<&()> {
         match v {
-            &JsonValue::Null => Some(&NULL),
+            JsonValue::Null => Some(&NULL),
             _ => None,
         }
     }
@@ -56,7 +56,7 @@ impl FromJsonValue for () {
 impl FromJsonValue for Vec<JsonValue> {
     fn from_json_value(v: &JsonValue) -> Option<&Vec<JsonValue>> {
         match v {
-            &JsonValue::Array(ref a) => Some(a),
+            JsonValue::Array(ref a) => Some(a),
             _ => None,
         }
     }
@@ -65,7 +65,7 @@ impl FromJsonValue for Vec<JsonValue> {
 impl FromJsonValue for HashMap<String, JsonValue> {
     fn from_json_value(v: &JsonValue) -> Option<&HashMap<String, JsonValue>> {
         match v {
-            &JsonValue::Object(ref h) => Some(h),
+            JsonValue::Object(ref h) => Some(h),
             _ => None,
         }
     }
@@ -78,42 +78,42 @@ impl JsonValue {
 
     pub fn is_bool(&self) -> bool {
         match self {
-            &JsonValue::Boolean(_) => true,
+            JsonValue::Boolean(_) => true,
             _ => false,
         }
     }
 
     pub fn is_number(&self) -> bool {
         match self {
-            &JsonValue::Number(_) => true,
+            JsonValue::Number(_) => true,
             _ => false,
         }
     }
 
     pub fn is_string(&self) -> bool {
         match self {
-            &JsonValue::String(_) => true,
+            JsonValue::String(_) => true,
             _ => false,
         }
     }
 
     pub fn is_null(&self) -> bool {
         match self {
-            &JsonValue::Null => true,
+            JsonValue::Null => true,
             _ => false,
         }
     }
 
     pub fn is_array(&self) -> bool {
         match self {
-            &JsonValue::Array(_) => true,
+            JsonValue::Array(_) => true,
             _ => false,
         }
     }
 
     pub fn is_object(&self) -> bool {
         match self {
-            &JsonValue::Object(_) => true,
+            JsonValue::Object(_) => true,
             _ => false,
         }
     }
@@ -124,7 +124,7 @@ impl<'a> Index<&'a str> for JsonValue {
 
     fn index<'b>(&'b self, key: &'a str) -> &'b JsonValue {
         let obj = match self {
-            &JsonValue::Object(ref o) => o,
+            JsonValue::Object(ref o) => o,
             _ => panic!(
                 "Attempted to access to an object with key '{}' but actually it was {:?}",
                 key, self
@@ -142,7 +142,7 @@ impl<'a> Index<&'a str> for JsonValue {
 impl Index<String> for JsonValue {
     type Output = JsonValue;
 
-    fn index<'a>(&'a self, key: String) -> &'a JsonValue {
+    fn index(&self, key: String) -> &'_ JsonValue {
         // Note:
         //   key   is 'String'
         //   *key  is 'str'
@@ -154,9 +154,9 @@ impl Index<String> for JsonValue {
 impl Index<usize> for JsonValue {
     type Output = JsonValue;
 
-    fn index<'a>(&'a self, i: usize) -> &'a JsonValue {
+    fn index(&self, i: usize) -> &'_ JsonValue {
         let array = match self {
-            &JsonValue::Array(ref a) => a,
+            JsonValue::Array(ref a) => a,
             _ => panic!(
                 "Attempted to access to an array but actually the value was {:?}",
                 self
