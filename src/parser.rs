@@ -263,16 +263,15 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
     }
 
     fn parse_number(&mut self) -> JsonParseResult {
-        let mut c = self.consume()?;
-        let negative = match c {
-            '-' => {
-                c = self.consume()?;
-                true
-            }
-            _ => false,
+        let neg = if self.peek()? == '-' {
+            self.consume().unwrap();
+            true
+        } else {
+            false
         };
 
-        let mut s = c.to_string();
+        let mut saw_dot = false;
+        let mut s = String::new();
         loop {
             let d = match self.chars.peek() {
                 Some(x) => *x,
@@ -280,23 +279,31 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
             };
 
             s.push(match d {
-                '0'..='9' | '.' | 'e' | 'E' => d,
+                '.' => {
+                    saw_dot = true;
+                    d
+                }
+                '0'..='9' | 'e' | 'E' | '-' | '+' => d,
                 _ => break,
             });
-            self.chars.next();
+            self.chars.next().unwrap();
+        }
+
+        if !saw_dot && s.starts_with('0') && s.len() > 1 {
+            return self.err(format!("Integer cannot start with 0"));
         }
 
         let n: f64 = match s.parse() {
             Ok(num) => num,
-            Err(_) => return self.err(format!("Invalid number: {}", s)),
+            Err(err) => return self.err(format!("Invalid number '{}': {}", s, err)),
         };
 
-        Ok(JsonValue::Number(if negative { -n } else { n }))
+        Ok(JsonValue::Number(if neg { -n } else { n }))
     }
 
     fn parse_any(&mut self) -> JsonParseResult {
         match self.peek()? {
-            '1'..='9' | '-' => self.parse_number(),
+            '0'..='9' | '-' => self.parse_number(),
             '"' => self.parse_string(),
             '[' => self.parse_array(),
             '{' => self.parse_object(),
