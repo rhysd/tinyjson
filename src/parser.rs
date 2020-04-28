@@ -42,12 +42,8 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
         }
     }
 
-    fn err(&self, msg: String) -> JsonParseResult {
-        Err(self.error(msg))
-    }
-
-    fn error(&self, msg: String) -> JsonParseError {
-        JsonParseError::new(msg, self.line, self.col)
+    fn err<T>(&self, msg: String) -> Result<T, JsonParseError> {
+        Err(JsonParseError::new(msg, self.line, self.col))
     }
 
     fn unexpected_eof(&self) -> Result<char, JsonParseError> {
@@ -191,20 +187,19 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
                     let c = self.consume()?;
                     let h = match c.to_digit(16) {
                             Some(n) => n,
-                            None => return Err(self.error(format!("Unicode character must be \\uXXXX (X is hex character) format but found '{}'", c))),
+                            None => return self.err(format!("Unicode character must be \\uXXXX (X is hex character) format but found '{}'", c)),
                         };
                     u = u * 0x10 + h;
                 }
                 match char::from_u32(u) {
                     Some(c) => c,
                     None => {
-                        return Err(
-                            self.error(format!("Cannot convert \\u{:x} into unicode character", u))
-                        )
+                        return self
+                            .err(format!("Cannot convert \\u{:x} into unicode character", u));
                     }
                 }
             }
-            c => return Err(self.error(format!("'\\{}' is invalid escaped character", c))),
+            c => return self.err(format!("'\\{}' is invalid escaped character", c)),
         })
     }
 
@@ -219,10 +214,10 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
                 '\\' => self.parse_special_char()?,
                 '"' => return Ok(JsonValue::String(s)),
                 c if c.is_control() => {
-                    return Err(self.error(format!(
+                    return self.err(format!(
                         "String cannot convert control character {}",
                         c.escape_debug(),
-                    )));
+                    ));
                 }
                 c => c,
             });
