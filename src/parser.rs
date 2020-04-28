@@ -316,11 +316,11 @@ where
     }
 }
 
-pub fn make_str_parser(s: &str) -> JsonParser<Chars> {
+pub fn make_str_parser(s: &str) -> JsonParser<Chars<'_>> {
     make_parser(s.chars())
 }
 
-pub fn make_string_parser(s: &String) -> JsonParser<Chars> {
+pub fn make_string_parser(s: &String) -> JsonParser<Chars<'_>> {
     make_parser(s.chars())
 }
 

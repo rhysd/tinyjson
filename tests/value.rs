@@ -1,4 +1,3 @@
-extern crate tinyjson;
 use tinyjson::*;
 
 const STR_OK: &'static str = r#"

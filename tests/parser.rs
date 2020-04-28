@@ -1,4 +1,3 @@
-extern crate tinyjson;
 use tinyjson::*;
 
 use std::fs;
