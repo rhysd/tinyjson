@@ -1,7 +1,7 @@
 use std::char;
 use std::collections::HashMap;
 use std::iter::Peekable;
-use std::str::Chars;
+use std::str::FromStr;
 
 use crate::JsonValue;
 
@@ -33,10 +33,15 @@ where
     col: usize,
 }
 
-impl<I> JsonParser<I>
-where
-    I: Iterator<Item = char>,
-{
+impl<I: Iterator<Item = char>> JsonParser<I> {
+    pub fn new(it: I) -> Self {
+        JsonParser {
+            chars: it.peekable(),
+            line: 0,
+            col: 0,
+        }
+    }
+
     fn err(&self, msg: String) -> JsonParseResult {
         Err(self.error(msg))
     }
@@ -305,50 +310,10 @@ where
     }
 }
 
-pub fn make_parser<I>(it: I) -> JsonParser<I>
-where
-    I: Iterator<Item = char>,
-{
-    JsonParser {
-        chars: it.peekable(),
-        line: 0,
-        col: 0,
-    }
-}
+impl FromStr for JsonValue {
+    type Err = JsonParseError;
 
-pub fn make_str_parser(s: &str) -> JsonParser<Chars<'_>> {
-    make_parser(s.chars())
-}
-
-pub fn make_string_parser(s: &String) -> JsonParser<Chars<'_>> {
-    make_parser(s.chars())
-}
-
-pub trait ParsableAsJson {
-    fn parse_as_json(&self) -> JsonParseResult;
-}
-
-impl<'a> ParsableAsJson for &'a String {
-    fn parse_as_json(&self) -> JsonParseResult {
-        let mut p = make_parser(self.chars());
-        p.parse()
-    }
-}
-
-impl<'a> ParsableAsJson for &'a str {
-    fn parse_as_json(&self) -> JsonParseResult {
-        let mut p = make_parser(self.chars());
-        p.parse()
-    }
-}
-
-pub fn parse<T: ParsableAsJson>(parsable: T) -> JsonParseResult {
-    parsable.parse_as_json()
-}
-
-pub fn must_parse<T: ParsableAsJson>(parsable: T) -> JsonValue {
-    match parse(parsable) {
-        Ok(json) => json,
-        Err(err) => panic!("tinyjson: Parse failed: {:?}", err),
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        JsonParser::new(s.chars()).parse()
     }
 }
