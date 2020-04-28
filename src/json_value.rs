@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use crate::generator::{stringify, JsonGenerateResult};
 use std::ops::Index;
 
 const NULL: () = ();
@@ -116,6 +117,10 @@ impl JsonValue {
             JsonValue::Object(_) => true,
             _ => false,
         }
+    }
+
+    pub fn stringify(&self) -> JsonGenerateResult {
+        stringify(self)
     }
 }
 

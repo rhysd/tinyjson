@@ -1,6 +1,5 @@
 use crate::JsonValue;
 use std::collections::HashMap;
-use std::convert::TryInto;
 use std::fmt;
 use std::string::ToString;
 
@@ -48,7 +47,7 @@ fn quote(s: &str) -> String {
 fn array(array: &[JsonValue]) -> JsonGenerateResult {
     let mut to = '['.to_string();
     for elem in array.iter() {
-        let s: String = elem.try_into()?;
+        let s: String = stringify(elem)?;
         to += &s;
         to.push(',');
     }
@@ -62,7 +61,7 @@ fn object(m: &HashMap<String, JsonValue>) -> JsonGenerateResult {
     for (k, v) in m {
         to += &quote(k);
         to.push(':');
-        let s: String = v.try_into()?;
+        let s: String = stringify(v)?;
         to += &s;
         to.push(',');
     }
@@ -81,23 +80,13 @@ fn number(f: f64) -> JsonGenerateResult {
     }
 }
 
-impl<'a> TryInto<String> for &'a JsonValue {
-    type Error = JsonGenerateError;
-    fn try_into(self) -> Result<String, Self::Error> {
-        match self {
-            JsonValue::Number(n) => number(*n),
-            JsonValue::Boolean(b) => Ok(b.to_string()),
-            JsonValue::String(s) => Ok(quote(s)),
-            JsonValue::Null => Ok("null".to_string()),
-            JsonValue::Array(a) => array(a),
-            JsonValue::Object(o) => object(o),
-        }
-    }
-}
-
-impl TryInto<String> for JsonValue {
-    type Error = JsonGenerateError;
-    fn try_into(self) -> Result<String, Self::Error> {
-        (&self).try_into()
+pub fn stringify(value: &JsonValue) -> JsonGenerateResult {
+    match value {
+        JsonValue::Number(n) => number(*n),
+        JsonValue::Boolean(b) => Ok(b.to_string()),
+        JsonValue::String(s) => Ok(quote(s)),
+        JsonValue::Null => Ok("null".to_string()),
+        JsonValue::Array(a) => array(a),
+        JsonValue::Object(o) => object(o),
     }
 }

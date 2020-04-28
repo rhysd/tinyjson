@@ -129,7 +129,7 @@ assert!(json["null"].is_null());
 
 ### Generate JSON
 
-`try_into()` method can be used to create JSON string from `JsonValue` since it implements [`TryInto`](https://doc.rust-lang.org/std/convert/trait.TryInto.html).
+`stringify()` method can be used to create JSON string.
 
 ```rust
 use tinyjson::JsonValue;
@@ -147,7 +147,7 @@ let s = r#"
 "#;
 
 let parsed: JsonValue = s.parse().unwrap();
-let str: String = parsed.try_into().unwrap();
+let str = parsed.stringify().unwrap();
 println!("{}", str);
 ```
 
