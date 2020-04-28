@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::ops::Index;
 
-static NULL: () = ();
+const NULL: () = ();
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum JsonValue {

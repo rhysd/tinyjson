@@ -1,4 +1,4 @@
-use JsonValue;
+use crate::JsonValue;
 
 fn generate_string(s: &String) -> String {
     s.clone()

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::iter::Peekable;
 use std::str::Chars;
 
-use JsonValue;
+use crate::JsonValue;
 
 #[derive(Debug)]
 pub struct JsonParseError {
