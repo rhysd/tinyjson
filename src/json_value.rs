@@ -15,14 +15,14 @@ pub enum JsonValue {
     Object(HashMap<String, JsonValue>),
 }
 
-pub trait FromJsonValue {
-    fn from_json_value(v: &JsonValue) -> Option<&Self>;
+pub trait JsonValueAs {
+    fn json_value_as(v: &JsonValue) -> Option<&Self>;
 }
 
-macro_rules! from_json_value {
+macro_rules! impl_json_value_as {
     ($to:ty, $pat:pat => $val:expr) => {
-        impl FromJsonValue for $to {
-            fn from_json_value(v: &JsonValue) -> Option<&$to> {
+        impl JsonValueAs for $to {
+            fn json_value_as(v: &JsonValue) -> Option<&$to> {
                 match v {
                     $pat => Some($val),
                     _ => None,
@@ -32,16 +32,16 @@ macro_rules! from_json_value {
     };
 }
 
-from_json_value!(f64, JsonValue::Number(n) => n);
-from_json_value!(bool, JsonValue::Boolean(b) => b);
-from_json_value!(String, JsonValue::String(s) => s);
-from_json_value!((), JsonValue::Null => &NULL);
-from_json_value!(Vec<JsonValue>, JsonValue::Array(a) => a);
-from_json_value!(HashMap<String, JsonValue>, JsonValue::Object(h) => h);
+impl_json_value_as!(f64, JsonValue::Number(n) => n);
+impl_json_value_as!(bool, JsonValue::Boolean(b) => b);
+impl_json_value_as!(String, JsonValue::String(s) => s);
+impl_json_value_as!((), JsonValue::Null => &NULL);
+impl_json_value_as!(Vec<JsonValue>, JsonValue::Array(a) => a);
+impl_json_value_as!(HashMap<String, JsonValue>, JsonValue::Object(h) => h);
 
 impl JsonValue {
-    pub fn get<T: FromJsonValue>(&self) -> Option<&T> {
-        T::from_json_value(self)
+    pub fn get<T: JsonValueAs>(&self) -> Option<&T> {
+        T::json_value_as(self)
     }
 
     pub fn is_bool(&self) -> bool {
