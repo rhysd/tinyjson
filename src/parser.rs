@@ -100,18 +100,6 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
         }
     }
 
-    fn check_string_char(&self, c: char) -> Result<char, JsonParseError> {
-        if c.is_control() {
-            let msg = format!(
-                "String cannot convert control character {}",
-                c.escape_debug(),
-            );
-            Err(self.error(msg))
-        } else {
-            Ok(c)
-        }
-    }
-
     pub fn parse_object(&mut self) -> JsonParseResult {
         if self.next()? != '{' {
             return self.err(String::from("Object must starts with '{'"));
@@ -207,7 +195,7 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
                     }
                 }
             }
-            c => self.check_string_char(c)?,
+            c => return Err(self.error(format!("'\\{}' is invalid escaped character", c))),
         })
     }
 
@@ -221,7 +209,13 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
             s.push(match self.next_no_skip()? {
                 '\\' => self.parse_special_char()?,
                 '"' => return Ok(JsonValue::String(s)),
-                c => self.check_string_char(c)?,
+                c if c.is_control() => {
+                    return Err(self.error(format!(
+                        "String cannot convert control character {}",
+                        c.escape_debug(),
+                    )));
+                }
+                c => c,
             });
         }
     }
