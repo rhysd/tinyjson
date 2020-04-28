@@ -24,7 +24,7 @@ Rust stable toolchain (no dependency).
 String is parsed to `JsonValue` struct.
 
 ```rust
-use tinyjson::parser::parse;
+use tinyjson::JsonValue;
 
 let s = r#"
     {
@@ -38,7 +38,7 @@ let s = r#"
     }
 "#;
 
-let parsed = parse(s);
+let parsed: JsonValue = s.parse().unwrap();
 println!("Parsed: {:?}", parsed);
 ```
 
@@ -60,7 +60,7 @@ let v = match json {
 But JSON is a tree structure and it's boring to write nested `match` statement.  So `JsonValue` meets `std::ops::Index` trait in order to access to its value quickly.
 
 ```rust
-let complicated_json = tinyjson::parser::parse(r#"
+let complicated_json: tinyjson::JsonValue = r#"
 {
   "foo": {
     "bar": [
@@ -73,7 +73,7 @@ let complicated_json = tinyjson::parser::parse(r#"
     ]
   }
 }
-"#);
+"#.parse().unwrap();
 
 let target_value = complicated_json["foo"]["bar"][0]["target"];
 println!("{:?}", target_value); // => JsonValue::Number(42.0)
@@ -86,13 +86,13 @@ When the value for key or the element of index was not found, it will call `pani
 Additionally, `get()` method is provided to dereference the `enum` value (e.g. `JsonValue::Number(4.2)` -> `4.2`).
 
 ```rust
-let json = tinyjson::parser::parse(r#"
+let json: tinyjson::JsonValue = r#"
 {
   "num": 42,
   "array": [1, true, "aaa"],
   "null": null
 }
-"#);
+"#.parse().unwrap();
 
 let ref num: f64 = json["num"].get().expect("Number value");
 let ref arr: Vec<JsonValue> = json["array"].get().expect("Array value");
@@ -108,20 +108,20 @@ print!("{}, {:?}", num, arr);
 `JsonValue` derives `PartialEq` traits hence it can be checked with `==` operator.
 
 ```rust
-let json = tinyjson::parser::parse(r#"{"foo": 42}"#);
+let json: JsonValue = r#"{"foo": 42}"#.parse().unwrap();
 assert!(json["foo"] == JsonValue::Number(42.0));
 ```
 
 If you want to check its type only, there are `is_xxx()` shortcut methods in `JsonValue` instead of using `match` statement explicitly.
 
 ```rust
-let json = tinyjson::parser::parse(r#"
+let json: tinyjson::JsonValue = r#"
 {
   "num": 42,
   "array": [1, true, "aaa"],
   "null": null
 }
-"#);
+"#.parse().unwrap();
 
 assert!(json["num"].is_number());
 assert!(json["array"].is_array());
@@ -133,7 +133,7 @@ assert!(json["null"].is_null());
 `to_string()` method can be used to create JSON string from `JsonValue`.
 
 ```rust
-use tinyjson::parser::parse;
+use tinyjson::JsonValue;
 use tinyjson::to_string;
 
 let s = r#"
@@ -148,7 +148,7 @@ let s = r#"
     }
 "#;
 
-let parsed = parse(s);
+let parsed: JsonValue = s.parse().unwrap();
 let str = parsed.to_string();
 println!("{}", str);
 ```
@@ -157,7 +157,6 @@ println!("{}", str);
 
 - [x] Parser
 - [x] Generator
-- [ ] Read from file descriptor
 - [x] Equality of `JsonValue`
 - [x] Index access to `JsonValue` (array, object)
 - [x] Tests
