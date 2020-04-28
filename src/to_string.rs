@@ -1,41 +1,57 @@
 use crate::JsonValue;
+use std::collections::HashMap;
+use std::string::ToString;
 
-fn generate_string(s: &String) -> String {
-    s.clone()
+fn quote(s: &str) -> String {
+    let mut to = '"'.to_string();
+    for c in s.chars() {
+        match c {
+            '\\' => to.push_str("\\\\"),
+            '\u{0008}' => to.push_str("\\b"),
+            '\u{000c}' => to.push_str("\\f"),
+            '\n' => to.push_str("\\n"),
+            '\r' => to.push_str("\\r"),
+            '\t' => to.push_str("\\t"),
+            c => to.push(c),
+        }
+    }
+    to.push('"');
+    to
 }
 
-fn generate_array(v: &Vec<JsonValue>) -> String {
-    let mut s = v
-        .iter()
-        .fold('['.to_string(), |acc, e| acc + &generate(e) + ",");
+fn array(v: &Vec<JsonValue>) -> String {
+    let mut s = v.iter().fold('['.to_string(), |mut acc, e| {
+        acc += &e.to_string();
+        acc.push(',');
+        acc
+    });
     s.pop(); // Remove trailing comma
     s.push(']');
     s
 }
 
-fn generate_object(m: &HashMap<String, JsonValue>) -> String {
+fn object(m: &HashMap<String, JsonValue>) -> String {
     let mut s = '{'.to_string();
     for (k, v) in m {
-        s = s + &generate_string(k) + ":" + &generate(v) + ",";
+        s += &quote(k);
+        s.push(':');
+        s += &v.to_string();
+        s.push(',');
     }
     s.pop(); // Remove trailing comma
     s.push('}');
     s
 }
 
-pub fn generate(v: &JsonValue) -> String {
-    match v {
-        JsonValue::Number(n) => n.to_string(),
-        JsonValue::Boolean(b) => b.to_string(),
-        JsonValue::String(s) => generate_string(s),
-        JsonValue::Null => "null".to_string(),
-        JsonValue::Array(a) => generate_array(a),
-        JsonValue::Object(o) => generate_object(o),
-    }
-}
-
-impl JsonValue {
-    pub fn to_string(&self) -> String {
-        generate(self)
+impl ToString for JsonValue {
+    fn to_string(&self) -> String {
+        match self {
+            JsonValue::Number(n) => n.to_string(),
+            JsonValue::Boolean(b) => b.to_string(),
+            JsonValue::String(s) => quote(s),
+            JsonValue::Null => "null".to_string(),
+            JsonValue::Array(a) => array(a),
+            JsonValue::Object(o) => object(o),
+        }
     }
 }
