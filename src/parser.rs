@@ -117,14 +117,13 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
             return self.err(String::from("Object must starts with '{'"));
         }
 
+        if self.peek()? == '}' {
+            self.next().unwrap();
+            return Ok(JsonValue::Object(HashMap::new()));
+        }
+
         let mut m = HashMap::new();
         loop {
-            let c = self.peek()?;
-            if c == '}' {
-                let _ = self.next();
-                break;
-            }
-
             let key = match self.parse()? {
                 JsonValue::String(s) => s,
                 v => return self.err(format!("Key of object must be string but found {:?}", v)),
@@ -140,21 +139,17 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
 
             m.insert(key, self.parse()?);
 
-            match self.peek()? {
-                ',' => {
-                    let _ = self.next();
-                }
-                '}' => {}
+            match self.next()? {
+                ',' => {}
+                '}' => return Ok(JsonValue::Object(m)),
                 c => {
                     return self.err(format!(
-                        "',' is expected for object but actually found '{}'",
-                        c
+                        "',' or '}}' is expected for object but actually found '{}'",
+                        c.escape_debug(),
                     ))
                 }
             }
         }
-
-        Ok(JsonValue::Object(m))
     }
 
     pub fn parse_array(&mut self) -> JsonParseResult {
@@ -162,31 +157,26 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
             return self.err(String::from("Array must starts with '['"));
         }
 
+        if self.peek()? == ']' {
+            self.next().unwrap();
+            return Ok(JsonValue::Array(vec![]));
+        }
+
         let mut v = vec![];
         loop {
-            let c = self.peek()?;
-            if c == ']' {
-                let _ = self.next();
-                break;
-            }
-
             v.push(self.parse()?);
 
-            match self.peek()? {
-                ',' => {
-                    let _ = self.next();
-                }
-                ']' => {}
+            match self.next()? {
+                ',' => {}
+                ']' => return Ok(JsonValue::Array(v)),
                 c => {
                     return self.err(format!(
-                        "',' is expected for array but actually found '{}'",
+                        "',' or ']' is expected for array but actually found '{}'",
                         c
                     ))
                 }
             }
         }
-
-        Ok(JsonValue::Array(v))
     }
 
     fn parse_special_char(&mut self) -> Result<char, JsonParseError> {
