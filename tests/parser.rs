@@ -60,7 +60,7 @@ fn test_reference_lifetime() {
 }
 
 #[test]
-fn test_parse_failed() {
+fn test_parse_failure() {
     for path in json_suite_paths() {
         if !path
             .file_name()
@@ -85,12 +85,28 @@ fn test_parse_failed() {
     }
 }
 
-/*
 #[test]
-fn test_parse_passed() {
-    each_pass_case(|json| {
-        let parsed = parse(&json);
-        assert!(parsed.is_ok(), "Incorrectly parse failed: {:?}: {:?}", json, parsed);
-    });
+fn test_parse_success() {
+    for path in json_suite_paths() {
+        if !path
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .starts_with("pass")
+        {
+            continue;
+        }
+        let mut f = fs::File::open(&path).expect("Failed to open file");
+        let mut json = String::new();
+        f.read_to_string(&mut json).expect("Failed to read file");
+        let parsed: JsonParseResult = json.parse();
+        assert!(
+            parsed.is_ok(),
+            "Incorrectly parse failed {:?}: {:?}: {:?}",
+            path,
+            parsed,
+            json,
+        );
+    }
 }
-*/
