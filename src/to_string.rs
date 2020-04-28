@@ -30,6 +30,7 @@ fn quote(s: &str) -> String {
             '\n' => to.push_str("\\n"),
             '\r' => to.push_str("\\r"),
             '\t' => to.push_str("\\t"),
+            '"' => to.push_str("\\\""),
             c => to.push(c),
         }
     }
