@@ -79,45 +79,53 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
         self.unexpected_eof()
     }
 
-    fn next(&mut self) -> Result<char, JsonParseError> {
+    fn next(&mut self) -> Option<char> {
         while let Some(c) = self.chars.next() {
             self.col += 1;
             if !c.is_whitespace() {
-                return Ok(c);
+                return Some(c);
             }
             if c == '\n' {
                 self.col = 0;
                 self.line += 1;
             }
         }
-        self.unexpected_eof()
+        None
     }
 
-    fn next_no_skip(&mut self) -> Result<char, JsonParseError> {
+    fn consume(&mut self) -> Result<char, JsonParseError> {
+        if let Some(c) = self.next() {
+            Ok(c)
+        } else {
+            self.unexpected_eof()
+        }
+    }
+
+    fn consume_no_skip(&mut self) -> Result<char, JsonParseError> {
         match self.chars.next() {
             Some(c) => Ok(c),
             None => self.unexpected_eof(),
         }
     }
 
-    pub fn parse_object(&mut self) -> JsonParseResult {
-        if self.next()? != '{' {
+    fn parse_object(&mut self) -> JsonParseResult {
+        if self.consume()? != '{' {
             return self.err(String::from("Object must starts with '{'"));
         }
 
         if self.peek()? == '}' {
-            self.next().unwrap();
+            self.consume().unwrap();
             return Ok(JsonValue::Object(HashMap::new()));
         }
 
         let mut m = HashMap::new();
         loop {
-            let key = match self.parse()? {
+            let key = match self.parse_any()? {
                 JsonValue::String(s) => s,
                 v => return self.err(format!("Key of object must be string but found {:?}", v)),
             };
 
-            let c = self.next()?;
+            let c = self.consume()?;
             if c != ':' {
                 return self.err(format!(
                     "':' is expected after key of object but actually found '{}'",
@@ -125,9 +133,9 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
                 ));
             }
 
-            m.insert(key, self.parse()?);
+            m.insert(key, self.parse_any()?);
 
-            match self.next()? {
+            match self.consume()? {
                 ',' => {}
                 '}' => return Ok(JsonValue::Object(m)),
                 c => {
@@ -140,21 +148,21 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
         }
     }
 
-    pub fn parse_array(&mut self) -> JsonParseResult {
-        if self.next()? != '[' {
+    fn parse_array(&mut self) -> JsonParseResult {
+        if self.consume()? != '[' {
             return self.err(String::from("Array must starts with '['"));
         }
 
         if self.peek()? == ']' {
-            self.next().unwrap();
+            self.consume().unwrap();
             return Ok(JsonValue::Array(vec![]));
         }
 
         let mut v = vec![];
         loop {
-            v.push(self.parse()?);
+            v.push(self.parse_any()?);
 
-            match self.next()? {
+            match self.consume()? {
                 ',' => {}
                 ']' => return Ok(JsonValue::Array(v)),
                 c => {
@@ -168,7 +176,7 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
     }
 
     fn parse_special_char(&mut self) -> Result<char, JsonParseError> {
-        Ok(match self.next_no_skip()? {
+        Ok(match self.consume_no_skip()? {
             '\\' => '\\',
             '/' => '/',
             '"' => '"',
@@ -180,7 +188,7 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
             'u' => {
                 let mut u = 0 as u32;
                 for _ in 0..4 {
-                    let c = self.next()?;
+                    let c = self.consume()?;
                     let h = match c.to_digit(16) {
                             Some(n) => n,
                             None => return Err(self.error(format!("Unicode character must be \\uXXXX (X is hex character) format but found '{}'", c))),
@@ -200,14 +208,14 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
         })
     }
 
-    pub fn parse_string(&mut self) -> JsonParseResult {
-        if self.next()? != '"' {
+    fn parse_string(&mut self) -> JsonParseResult {
+        if self.consume()? != '"' {
             return self.err(String::from("String must starts with double quote"));
         }
 
         let mut s = String::new();
         loop {
-            s.push(match self.next_no_skip()? {
+            s.push(match self.consume_no_skip()? {
                 '\\' => self.parse_special_char()?,
                 '"' => return Ok(JsonValue::String(s)),
                 c if c.is_control() => {
@@ -223,7 +231,7 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
 
     fn parse_constant(&mut self, s: &'static str) -> Option<JsonParseError> {
         for c in s.chars() {
-            match self.next_no_skip() {
+            match self.consume_no_skip() {
                 Ok(x) if x != c => {
                     return Some(JsonParseError::new(
                         format!("err while parsing '{}', invalid character '{}' found", s, c),
@@ -238,32 +246,32 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
         None
     }
 
-    pub fn parse_null(&mut self) -> JsonParseResult {
+    fn parse_null(&mut self) -> JsonParseResult {
         match self.parse_constant("null") {
             Some(err) => Err(err),
             None => Ok(JsonValue::Null),
         }
     }
 
-    pub fn parse_true(&mut self) -> JsonParseResult {
+    fn parse_true(&mut self) -> JsonParseResult {
         match self.parse_constant("true") {
             Some(err) => Err(err),
             None => Ok(JsonValue::Boolean(true)),
         }
     }
 
-    pub fn parse_false(&mut self) -> JsonParseResult {
+    fn parse_false(&mut self) -> JsonParseResult {
         match self.parse_constant("false") {
             Some(err) => Err(err),
             None => Ok(JsonValue::Boolean(false)),
         }
     }
 
-    pub fn parse_number(&mut self) -> JsonParseResult {
-        let mut c = self.next()?;
+    fn parse_number(&mut self) -> JsonParseResult {
+        let mut c = self.consume()?;
         let negative = match c {
             '-' => {
-                c = self.next()?;
+                c = self.consume()?;
                 true
             }
             _ => false,
@@ -291,7 +299,7 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
         Ok(JsonValue::Number(if negative { -n } else { n }))
     }
 
-    pub fn parse(&mut self) -> JsonParseResult {
+    fn parse_any(&mut self) -> JsonParseResult {
         match self.peek()? {
             '1'..='9' | '-' => self.parse_number(),
             '"' => self.parse_string(),
@@ -300,8 +308,21 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
             't' => self.parse_true(),
             'f' => self.parse_false(),
             'n' => self.parse_null(),
-            c => self.err(format!("Invalid character: {}", c)),
+            c => self.err(format!("Invalid character: {}", c.escape_debug())),
         }
+    }
+
+    pub fn parse(&mut self) -> JsonParseResult {
+        let v = self.parse_any()?;
+
+        if let Some(c) = self.next() {
+            return self.err(format!(
+                "Expected EOF but got character '{}'",
+                c.escape_debug(),
+            ));
+        }
+
+        Ok(v)
     }
 }
 
