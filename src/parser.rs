@@ -307,7 +307,14 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
         let mut s = String::new();
         while let Some(d) = self.chars.peek() {
             s.push(match d {
-                '.' | 'e' | 'E' | '-' | '+' => {
+                '.' | '-' | '+' => {
+                    is_int = false;
+                    *d
+                }
+                'e' | 'E' => {
+                    if s.ends_with('.') {
+                        return self.err("Mantissa ends with '.'".to_string());
+                    }
                     is_int = false;
                     *d
                 }
