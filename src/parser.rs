@@ -324,6 +324,10 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
             self.consume_no_skip().unwrap();
         }
 
+        if s.starts_with(&['.', 'e', 'E', '-', '+'][..]) {
+            return self.err("Number literal starts with invalid character".to_string());
+        }
+
         if s.ends_with(&['.', 'e', 'E', '-', '+'][..]) {
             return self.err("Number literal ends with invalid character".to_string());
         }
