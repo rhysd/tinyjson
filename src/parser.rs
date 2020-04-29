@@ -262,7 +262,7 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
             match self.consume_no_skip() {
                 Ok(x) if x != c => {
                     return Some(JsonParseError::new(
-                        format!("err while parsing '{}', invalid character '{}' found", s, c),
+                        format!("Unexpected character '{}' while parsing '{}'", c, s),
                         self.line,
                         self.col,
                     ));
@@ -324,11 +324,12 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
         }
 
         if s.is_empty() {
-            return self.err("Mantissa must not be empty in number literal".to_string());
+            return self.err("Integer part must not be empty in number literal".to_string());
         }
 
         if s.starts_with('0') && s.len() > 1 {
-            return self.err("Mantissa must not start with 0 except for '0'".to_string());
+            return self
+                .err("Integer part of number must not start with 0 except for '0'".to_string());
         }
 
         if saw_dot {
@@ -345,7 +346,7 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
                 self.consume_no_skip().unwrap();
             }
             if s.ends_with('.') {
-                return self.err("Mantissa must not end with '.'".to_string());
+                return self.err("Fraction part of number must not be empty".to_string());
             }
         }
 
@@ -366,13 +367,13 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
             }
 
             if !saw_digit {
-                return self.err("Exponent part must not be empty".to_string());
+                return self.err("Exponent part must not be empty in number literal".to_string());
             }
         }
 
         match s.parse::<f64>() {
             Ok(n) => Ok(JsonValue::Number(if neg { -n } else { n })),
-            Err(err) => self.err(format!("Invalid number '{}': {}", s, err)),
+            Err(err) => self.err(format!("Invalid number literal '{}': {}", s, err)),
         }
     }
 
