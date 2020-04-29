@@ -210,12 +210,11 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
                         let mut u = 0u16;
                         for _ in 0..4 {
                             let c = self.consume()?;
-                            let h = if let Some(h) = c.to_digit(16) {
-                                h as u16
+                            if let Some(h) = c.to_digit(16) {
+                                u = u * 0x10 + h as u16;
                             } else {
                                 return self.err(format!("Unicode character must be \\uXXXX (X is hex character) format but found character '{}'", c));
-                            };
-                            u = u * 0x10 + h;
+                            }
                         }
                         utf16.push(u);
                         // Additional \uXXXX character may follow. UTF-16 characters must be converted
@@ -306,6 +305,10 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
                 _ => break,
             });
             self.consume_no_skip().unwrap();
+        }
+
+        if s.ends_with(&['.', 'e', 'E', '-', '+'][..]) {
+            return self.err("Number literal ends with invalid character".to_string());
         }
 
         if is_int && s.starts_with('0') && s.len() > 1 {
