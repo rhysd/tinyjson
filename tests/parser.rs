@@ -57,6 +57,29 @@ fn test_utf16_surrogate_pair() {
     assert_eq!(&s, "\u{10ffff}");
 }
 
+#[test]
+fn test_numbers_edge_case() {
+    let parsed: JsonValue = r#"0"#.parse().unwrap();
+    let n: f64 = parsed.try_into().unwrap();
+    assert_eq!(n, 0.0);
+
+    let parsed: JsonValue = r#"0e1"#.parse().unwrap();
+    let n: f64 = parsed.try_into().unwrap();
+    assert_eq!(n, 0.0);
+
+    let parsed: JsonValue = r#"0.0"#.parse().unwrap();
+    let n: f64 = parsed.try_into().unwrap();
+    assert_eq!(n, 0.0);
+
+    let parsed: JsonValue = r#"1e+1"#.parse().unwrap();
+    let n: f64 = parsed.try_into().unwrap();
+    assert_eq!(n, 10.0);
+
+    let parsed: JsonValue = r#"1e-1"#.parse().unwrap();
+    let n: f64 = parsed.try_into().unwrap();
+    assert_eq!(n, 0.1);
+}
+
 fn json_org_suite_paths() -> impl Iterator<Item = PathBuf> {
     let mut dir = PathBuf::new();
     dir.push("tests");

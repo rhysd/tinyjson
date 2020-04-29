@@ -231,7 +231,7 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
                 }
                 c if c.is_control() => {
                     return self.err(format!(
-                        "String cannot convert control character {}",
+                        "String cannot contain control character {}",
                         c.escape_debug(),
                     ));
                 }
@@ -290,21 +290,21 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
             false
         };
 
-        let mut saw_dot = false;
+        let mut is_int = true;
         let mut s = String::new();
         while let Some(d) = self.chars.peek() {
             s.push(match d {
-                '.' => {
-                    saw_dot = true;
+                '.' | 'e' | 'E' | '-' | '+' => {
+                    is_int = false;
                     *d
                 }
-                '0'..='9' | 'e' | 'E' | '-' | '+' => *d,
+                '0'..='9' => *d,
                 _ => break,
             });
             self.consume_no_skip().unwrap();
         }
 
-        if !saw_dot && s.starts_with('0') && s.len() > 1 {
+        if is_int && s.starts_with('0') && s.len() > 1 {
             return self.err("Integer cannot start with 0".to_string());
         }
 
