@@ -7,15 +7,15 @@ tinyjson
 
 Goals:
 
-- Using Stable APIs; using no experimental APIs, no compiler plugin.
-- Reasonable simple JSON object interface; not serialize/deserialize JSON format to some specific `struct`.
-- Dependency free.
+- Using Stable APIs; using no experimental APIs, no compiler plugin
+- Reasonable simple JSON object interface; not serialize/deserialize JSON format to some specific `struct`
+- Dependency free
 - Well tested with famous JSON test suites
   - [JSON checker in json.org](http://www.json.org/JSON_checker/)
   - [JSONTestSuite](https://github.com/nst/JSONTestSuite)
 - My Rust practice :)
 
-## Requrements
+## Requirements
 
 Rust stable toolchain (no dependency).
 
@@ -70,7 +70,7 @@ Each JSON types correspond to Rust types as follows:
 | Array   | `Vec<JsonValue>`             |
 | Object  | `HashMap<String, JsonValue>` |
 
-JSON is a tree structure and it's boring to write nested `match` statement.  So `JsonValue` implements `std::ops::Index` trait in order to access to its value quickly.
+JSON is a tree structure and it's boring to write nested `match` statement.  So `JsonValue` implements `std::ops::Index` trait in order to access to its nested values quickly.
 
 ```rust
 let complicated_json: tinyjson::JsonValue = r#"
