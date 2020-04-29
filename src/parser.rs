@@ -229,7 +229,11 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
                     self.push_utf16(&mut s, &mut utf16)?;
                     return Ok(JsonValue::String(s));
                 }
-                c if c.is_control() => {
+                // Note: c.is_control() is not available here because JSON accepts 0x7f (DEL) in
+                // string literals but 0x7f is control character.
+                // Rough spec of JSON says string literal cannot contain control characters. But it
+                // can actually contain 0x7f.
+                c if (c as u32) < 0x20 => {
                     return self.err(format!(
                         "String cannot contain control character {}",
                         c.escape_debug(),
