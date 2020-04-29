@@ -60,6 +60,19 @@ fn test_reference_lifetime() {
 }
 
 #[test]
+fn test_position() {
+    let parsed: JsonParseResult = "{\n\"foo\":42\n ".parse();
+    match parsed {
+        Ok(v) => panic!("unexpected success: {:?}", v),
+        Err(e) => {
+            let msg = format!("{}", e);
+            assert!(msg.contains("line:3"), "message is '{}'", msg);
+            assert!(msg.contains("col:1"), "message is '{}'", msg);
+        }
+    }
+}
+
+#[test]
 fn test_parse_failure() {
     for path in json_suite_paths() {
         if !path

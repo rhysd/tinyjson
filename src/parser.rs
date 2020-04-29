@@ -44,7 +44,7 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
     pub fn new(it: I) -> Self {
         JsonParser {
             chars: it.peekable(),
-            line: 0,
+            line: 1,
             col: 0,
         }
     }
@@ -61,31 +61,31 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
         ))
     }
 
+    fn next_pos(&mut self, c: char) {
+        if c == '\n' {
+            self.col = 0;
+            self.line += 1;
+        } else {
+            self.col += 1;
+        }
+    }
+
     fn peek(&mut self) -> Result<char, JsonParseError> {
-        while let Some(c) = self.chars.peek() {
+        while let Some(c) = self.chars.peek().copied() {
             if !c.is_whitespace() {
-                return Ok(*c);
+                return Ok(c);
             }
-            if *c == '\n' {
-                self.col = 0;
-                self.line += 1;
-            } else {
-                self.col += 1;
-            }
-            self.chars.next();
+            self.next_pos(c);
+            self.chars.next().unwrap();
         }
         self.unexpected_eof()
     }
 
     fn next(&mut self) -> Option<char> {
         while let Some(c) = self.chars.next() {
-            self.col += 1;
+            self.next_pos(c);
             if !c.is_whitespace() {
                 return Some(c);
-            }
-            if c == '\n' {
-                self.col = 0;
-                self.line += 1;
             }
         }
         None
@@ -100,9 +100,11 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
     }
 
     fn consume_no_skip(&mut self) -> Result<char, JsonParseError> {
-        match self.chars.next() {
-            Some(c) => Ok(c),
-            None => self.unexpected_eof(),
+        if let Some(c) = self.chars.next() {
+            self.next_pos(c);
+            Ok(c)
+        } else {
+            self.unexpected_eof()
         }
     }
 
@@ -283,7 +285,7 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
                 '0'..='9' | 'e' | 'E' | '-' | '+' => *d,
                 _ => break,
             });
-            self.chars.next().unwrap();
+            self.consume_no_skip().unwrap();
         }
 
         if !saw_dot && s.starts_with('0') && s.len() > 1 {
