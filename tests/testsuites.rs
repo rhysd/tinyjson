@@ -2,6 +2,7 @@ use std::fs;
 use std::io::Read;
 use std::path::PathBuf;
 use tinyjson::*;
+use walkdir::WalkDir;
 
 fn json_org_suite_paths() -> impl Iterator<Item = PathBuf> {
     let mut dir = PathBuf::new();
@@ -157,5 +158,30 @@ fn test_json_test_suite_transform() {
             let _: JsonParseResult = json.parse();
             // Both failure and success are acceptable, but should not crash
         }
+    }
+}
+
+#[test]
+fn test_json_schema_test_suite() {
+    let mut dir = PathBuf::new();
+    dir.push("tests");
+    dir.push("assets");
+    dir.push("JSON-Schema-Test-Suite");
+
+    for entry in WalkDir::new(dir) {
+        let entry = entry.unwrap();
+        if !entry.file_name().to_str().unwrap().ends_with(".json") {
+            continue;
+        }
+        let path = entry.path();
+        let json = fs::read_to_string(path).unwrap();
+        let parsed: JsonParseResult = json.parse();
+        assert!(
+            parsed.is_ok(),
+            "Incorrectly parse failed {:?}: {:?}: {:?}",
+            path,
+            parsed,
+            json,
+        );
     }
 }

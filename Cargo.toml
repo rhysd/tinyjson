@@ -22,3 +22,6 @@ include = [
 maintenance = { status = "passively-maintained" }
 
 [dependencies]
+
+[dev-dependencies]
+walkdir = "2"
