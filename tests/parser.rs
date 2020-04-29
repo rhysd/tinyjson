@@ -4,18 +4,6 @@ use std::fs;
 use std::io::Read;
 use std::path::PathBuf;
 
-fn json_org_suite_paths() -> impl Iterator<Item = PathBuf> {
-    let mut dir = PathBuf::new();
-    dir.push("tests");
-    dir.push("assets");
-    dir.push("jsonorg");
-    fs::read_dir(dir)
-        .expect("'assets' directory not found")
-        .map(|e| e.expect("Incorrect directory entry"))
-        .filter(|e| e.file_type().expect("Failed to obtain file type").is_file())
-        .map(|e| e.path())
-}
-
 const STR_OK: &'static str = r#"
           {
             "bool": true,
@@ -57,6 +45,18 @@ fn test_position() {
     }
 }
 
+fn json_org_suite_paths() -> impl Iterator<Item = PathBuf> {
+    let mut dir = PathBuf::new();
+    dir.push("tests");
+    dir.push("assets");
+    dir.push("jsonorg");
+    fs::read_dir(dir)
+        .expect("directory not found")
+        .map(|e| e.expect("Incorrect directory entry"))
+        .filter(|e| e.file_type().expect("Failed to obtain file type").is_file())
+        .map(|e| e.path())
+}
+
 #[test]
 fn test_json_org_failure() {
     for path in json_org_suite_paths() {
@@ -95,9 +95,45 @@ fn test_json_org_success() {
         {
             continue;
         }
-        let mut f = fs::File::open(&path).expect("Failed to open file");
-        let mut json = String::new();
-        f.read_to_string(&mut json).expect("Failed to read file");
+
+        let json = fs::read_to_string(&path).unwrap();
+        let parsed: JsonParseResult = json.parse();
+        assert!(
+            parsed.is_ok(),
+            "Incorrectly parse failed {:?}: {:?}: {:?}",
+            path,
+            parsed,
+            json,
+        );
+    }
+}
+
+fn json_test_suite_paths(testdir: &'static str) -> impl Iterator<Item = PathBuf> {
+    let mut dir = PathBuf::new();
+    dir.push("tests");
+    dir.push("assets");
+    dir.push("JSONTestSuite");
+    dir.push(testdir);
+    fs::read_dir(dir)
+        .expect("directory not found")
+        .map(|e| e.expect("Incorrect directory entry"))
+        .filter(|e| e.file_type().expect("Failed to obtain file type").is_file())
+        .map(|e| e.path())
+}
+
+#[test]
+fn test_json_test_suite_success() {
+    for path in json_test_suite_paths("test_parsing") {
+        if !path
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .starts_with("y_")
+        {
+            continue;
+        }
+        let json = fs::read_to_string(&path).unwrap();
         let parsed: JsonParseResult = json.parse();
         assert!(
             parsed.is_ok(),
