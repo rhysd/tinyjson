@@ -1,5 +1,6 @@
 use tinyjson::*;
 
+use std::convert::TryInto;
 use std::fs;
 use std::io::Read;
 use std::path::PathBuf;
@@ -43,6 +44,17 @@ fn test_position() {
             assert!(msg.contains("col:1"), "message is '{}'", msg);
         }
     }
+}
+
+#[test]
+fn test_utf16_surrogate_pair() {
+    let parsed: JsonValue = r#""\uDBFF\uDFFF hello!""#.parse().unwrap();
+    let s: String = parsed.try_into().unwrap();
+    assert_eq!(&s, "\u{10ffff} hello!");
+
+    let parsed: JsonValue = r#""\uDBFF\uDFFF""#.parse().unwrap();
+    let s: String = parsed.try_into().unwrap();
+    assert_eq!(&s, "\u{10ffff}");
 }
 
 fn json_org_suite_paths() -> impl Iterator<Item = PathBuf> {

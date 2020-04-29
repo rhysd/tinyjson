@@ -175,36 +175,17 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
         }
     }
 
-    fn parse_special_char(&mut self) -> Result<char, JsonParseError> {
-        Ok(match self.consume_no_skip()? {
-            '\\' => '\\',
-            '/' => '/',
-            '"' => '"',
-            'b' => '\u{0008}',
-            'f' => '\u{000c}',
-            'n' => '\n',
-            'r' => '\r',
-            't' => '\t',
-            'u' => {
-                let mut u = 0 as u32;
-                for _ in 0..4 {
-                    let c = self.consume()?;
-                    let h = match c.to_digit(16) {
-                            Some(n) => n,
-                            None => return self.err(format!("Unicode character must be \\uXXXX (X is hex character) format but found '{}'", c)),
-                        };
-                    u = u * 0x10 + h;
-                }
-                match char::from_u32(u) {
-                    Some(c) => c,
-                    None => {
-                        return self
-                            .err(format!("Cannot convert \\u{:x} into unicode character", u));
-                    }
-                }
-            }
-            c => return self.err(format!("'\\{}' is invalid escaped character", c)),
-        })
+    fn push_utf16(&self, s: &mut String, utf16: &mut Vec<u16>) -> Result<(), JsonParseError> {
+        if utf16.is_empty() {
+            return Ok(());
+        }
+
+        match String::from_utf16(&utf16) {
+            Ok(utf8) => s.push_str(&utf8),
+            Err(err) => return self.err(format!("Invalid UTF-16 sequence {:?}: {}", &utf16, err)),
+        }
+        utf16.clear();
+        Ok(())
     }
 
     fn parse_string(&mut self) -> JsonParseResult {
@@ -212,11 +193,42 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
             return self.err(String::from("String must starts with double quote"));
         }
 
+        let mut utf16 = Vec::new(); // Buffer for parsing \uXXXX UTF-16 characters
         let mut s = String::new();
         loop {
-            s.push(match self.consume_no_skip()? {
-                '\\' => self.parse_special_char()?,
-                '"' => return Ok(JsonValue::String(s)),
+            let c = match self.consume_no_skip()? {
+                '\\' => match self.consume_no_skip()? {
+                    '\\' => '\\',
+                    '/' => '/',
+                    '"' => '"',
+                    'b' => '\u{0008}',
+                    'f' => '\u{000c}',
+                    'n' => '\n',
+                    'r' => '\r',
+                    't' => '\t',
+                    'u' => {
+                        let mut u = 0u16;
+                        for _ in 0..4 {
+                            let c = self.consume()?;
+                            let h = if let Some(h) = c.to_digit(16) {
+                                h as u16
+                            } else {
+                                return self.err(format!("Unicode character must be \\uXXXX (X is hex character) format but found character '{}'", c));
+                            };
+                            u = u * 0x10 + h;
+                        }
+                        utf16.push(u);
+                        // Additional \uXXXX character may follow. UTF-16 characters must be converted
+                        // into UTF-8 string as sequence because surrogate pairs must be considerd
+                        // like "\uDBFF\uDFFF".
+                        continue;
+                    }
+                    c => return self.err(format!("'\\{}' is invalid escaped character", c)),
+                },
+                '"' => {
+                    self.push_utf16(&mut s, &mut utf16)?;
+                    return Ok(JsonValue::String(s));
+                }
                 c if c.is_control() => {
                     return self.err(format!(
                         "String cannot convert control character {}",
@@ -224,7 +236,11 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
                     ));
                 }
                 c => c,
-            });
+            };
+
+            self.push_utf16(&mut s, &mut utf16)?;
+
+            s.push(c);
         }
     }
 
