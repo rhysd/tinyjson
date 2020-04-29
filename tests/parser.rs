@@ -210,3 +210,29 @@ fn test_json_test_suite_failure() {
         }
     }
 }
+
+#[test]
+fn test_json_test_suite_implementation_defined() {
+    for path in json_test_suite_paths("test_parsing") {
+        let fname = path.file_name().unwrap().to_str().unwrap();
+        if !fname.starts_with("i_") {
+            continue;
+        }
+
+        if let Ok(json) = fs::read_to_string(&path) {
+            let _: JsonParseResult = json.parse();
+            // Both failure and success are acceptable, but should not crash
+        }
+    }
+}
+
+#[test]
+fn test_json_test_suite_transform() {
+    // These files contain weird structures and characters that parsers may understand differently
+    for path in json_test_suite_paths("test_transform") {
+        if let Ok(json) = fs::read_to_string(&path) {
+            let _: JsonParseResult = json.parse();
+            // Both failure and success are acceptable, but should not crash
+        }
+    }
+}
