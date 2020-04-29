@@ -179,3 +179,29 @@ fn test_json_test_suite_success() {
         );
     }
 }
+
+#[test]
+fn test_json_test_suite_failure() {
+    for path in json_test_suite_paths("test_parsing") {
+        if !path
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .starts_with("n_")
+        {
+            continue;
+        }
+
+        if let Ok(json) = fs::read_to_string(&path) {
+            let parsed: JsonParseResult = json.parse();
+            assert!(
+                parsed.is_err(),
+                "Incorrectly parse succeeded {:?}: {:?}: {:?}",
+                path,
+                parsed,
+                json,
+            );
+        }
+    }
+}
