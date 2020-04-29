@@ -58,7 +58,7 @@ fn test_utf16_surrogate_pair() {
 }
 
 #[test]
-fn test_numbers_edge_case() {
+fn test_number_success_edge_cases() {
     let parsed: JsonValue = r#"0"#.parse().unwrap();
     let n: f64 = parsed.try_into().unwrap();
     assert_eq!(n, 0.0);
@@ -78,6 +78,32 @@ fn test_numbers_edge_case() {
     let parsed: JsonValue = r#"1e-1"#.parse().unwrap();
     let n: f64 = parsed.try_into().unwrap();
     assert_eq!(n, 0.1);
+}
+
+#[test]
+fn test_number_failure_edge_cases() {
+    let parsed: JsonParseResult = r#"01"#.parse();
+    parsed.unwrap_err();
+    let parsed: JsonParseResult = r#"0."#.parse();
+    parsed.unwrap_err();
+    let parsed: JsonParseResult = r#".0"#.parse();
+    parsed.unwrap_err();
+    let parsed: JsonParseResult = r#"01e1"#.parse();
+    parsed.unwrap_err();
+    let parsed: JsonParseResult = r#"01.1"#.parse();
+    parsed.unwrap_err();
+    let parsed: JsonParseResult = r#"-01"#.parse();
+    parsed.unwrap_err();
+    let parsed: JsonParseResult = r#"0e"#.parse();
+    parsed.unwrap_err();
+    let parsed: JsonParseResult = r#"0e+"#.parse();
+    parsed.unwrap_err();
+    let parsed: JsonParseResult = r#"0e-"#.parse();
+    parsed.unwrap_err();
+    let parsed: JsonParseResult = r#"- 1"#.parse();
+    parsed.unwrap_err();
+    let parsed: JsonParseResult = r#"-"#.parse();
+    parsed.unwrap_err();
 }
 
 fn json_org_suite_paths() -> impl Iterator<Item = PathBuf> {

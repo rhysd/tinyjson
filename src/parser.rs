@@ -228,7 +228,7 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
                         }
                         utf16.push(u);
                         // Additional \uXXXX character may follow. UTF-16 characters must be converted
-                        // into UTF-8 string as sequence because surrogate pairs must be considerd
+                        // into UTF-8 string as sequence because surrogate pairs must be considered
                         // like "\uDBFF\uDFFF".
                         continue;
                     }
@@ -297,51 +297,83 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
 
     fn parse_number(&mut self) -> JsonParseResult {
         let neg = if self.peek()? == '-' {
-            self.consume().unwrap();
+            self.consume_no_skip().unwrap();
             true
         } else {
             false
         };
 
-        let mut is_int = true;
         let mut s = String::new();
+        let mut saw_dot = false;
+        let mut saw_exp = false;
+
         while let Some(d) = self.chars.peek() {
-            s.push(match d {
-                '.' | '-' | '+' => {
-                    is_int = false;
-                    *d
+            match d {
+                '0'..='9' => s.push(*d),
+                '.' => {
+                    saw_dot = true;
+                    break;
                 }
                 'e' | 'E' => {
-                    if s.ends_with('.') {
-                        return self.err("Mantissa ends with '.'".to_string());
-                    }
-                    is_int = false;
-                    *d
+                    saw_exp = true;
+                    break;
                 }
-                '0'..='9' => *d,
                 _ => break,
-            });
+            }
             self.consume_no_skip().unwrap();
         }
 
-        if s.starts_with(&['.', 'e', 'E', '-', '+'][..]) {
-            return self.err("Number literal starts with invalid character".to_string());
+        if s.is_empty() {
+            return self.err("Mantissa must not be empty in number literal".to_string());
         }
 
-        if s.ends_with(&['.', 'e', 'E', '-', '+'][..]) {
-            return self.err("Number literal ends with invalid character".to_string());
+        if s.starts_with('0') && s.len() > 1 {
+            return self.err("Mantissa must not start with 0 except for '0'".to_string());
         }
 
-        if is_int && s.starts_with('0') && s.len() > 1 {
-            return self.err("Integer cannot start with 0".to_string());
+        if saw_dot {
+            s.push(self.consume_no_skip().unwrap()); // eat '.'
+            while let Some(d) = self.chars.peek() {
+                match d {
+                    '0'..='9' => s.push(*d),
+                    'e' | 'E' => {
+                        saw_exp = true;
+                        break;
+                    }
+                    _ => break,
+                }
+                self.consume_no_skip().unwrap();
+            }
+            if s.ends_with('.') {
+                return self.err("Mantissa must not end with '.'".to_string());
+            }
         }
 
-        let n: f64 = match s.parse() {
-            Ok(num) => num,
-            Err(err) => return self.err(format!("Invalid number '{}': {}", s, err)),
-        };
+        if saw_exp {
+            s.push(self.consume_no_skip().unwrap()); // eat 'e' or 'E'
+            if let Some('+') | Some('-') = self.chars.peek() {
+                s.push(self.consume_no_skip().unwrap());
+            }
 
-        Ok(JsonValue::Number(if neg { -n } else { n }))
+            let mut saw_digit = false;
+            while let Some(d) = self.chars.peek() {
+                match d {
+                    '0'..='9' => s.push(*d),
+                    _ => break,
+                }
+                saw_digit = true;
+                self.consume_no_skip().unwrap();
+            }
+
+            if !saw_digit {
+                return self.err("Exponent part must not be empty".to_string());
+            }
+        }
+
+        match s.parse::<f64>() {
+            Ok(n) => Ok(JsonValue::Number(if neg { -n } else { n })),
+            Err(err) => self.err(format!("Invalid number '{}': {}", s, err)),
+        }
     }
 
     fn parse_any(&mut self) -> JsonParseResult {

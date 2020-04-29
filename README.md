@@ -10,6 +10,9 @@ Goals:
 - Using Stable APIs; using no experimental APIs, no compiler plugin.
 - Reasonable simple JSON object interface; not serialize/deserialize JSON format to some specific `struct`.
 - Dependency free.
+- Well tested with famous JSON test suites
+  - [JSON checker in json.org](http://www.json.org/JSON_checker/)
+  - [JSONTestSuite](https://github.com/nst/JSONTestSuite)
 - My Rust practice :)
 
 ## Requrements
