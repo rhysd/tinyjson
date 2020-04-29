@@ -31,6 +31,16 @@ impl fmt::Display for JsonParseError {
 
 pub type JsonParseResult = Result<JsonValue, JsonParseError>;
 
+// Note: char::is_ascii_whitespace is not available because some characters are not defined as
+// whitespace character in JSON spec. For example, U+000C FORM FEED is whitespace in Rust but
+// it isn't in JSON.
+fn is_whitespace(c: char) -> bool {
+    match c {
+        '\u{0020}' | '\u{000a}' | '\u{000d}' | '\u{0009}' => true,
+        _ => false,
+    }
+}
+
 pub struct JsonParser<I>
 where
     I: Iterator<Item = char>,
@@ -72,7 +82,7 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
 
     fn peek(&mut self) -> Result<char, JsonParseError> {
         while let Some(c) = self.chars.peek().copied() {
-            if !c.is_whitespace() {
+            if !is_whitespace(c) {
                 return Ok(c);
             }
             self.next_pos(c);
@@ -84,7 +94,7 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
     fn next(&mut self) -> Option<char> {
         while let Some(c) = self.chars.next() {
             self.next_pos(c);
-            if !c.is_whitespace() {
+            if !is_whitespace(c) {
                 return Some(c);
             }
         }
