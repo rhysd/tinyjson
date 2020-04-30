@@ -80,10 +80,10 @@ Each JSON types correspond to Rust types as follows:
 | Array   | `Vec<JsonValue>`             |
 | Object  | `HashMap<String, JsonValue>` |
 
-JSON is a tree structure and it's boring to write nested `match` statement.  So `JsonValue` implements `std::ops::Index` trait in order to access to its nested values quickly.
+JSON is a tree structure and it's boring to write nested `match` statement.  So `JsonValue` implements `std::ops::Index` and `std::ops::IndexMut` traits in order to access to its nested values quickly.
 
 ```rust
-let complicated_json: tinyjson::JsonValue = r#"
+let mut json: tinyjson::JsonValue = r#"
 {
   "foo": {
     "bar": [
@@ -98,13 +98,43 @@ let complicated_json: tinyjson::JsonValue = r#"
 }
 "#.parse().unwrap();
 
-let target_value = complicated_json["foo"]["bar"][0]["target"];
+// Access with index operator
+let target_value = json["foo"]["bar"][0]["target"];
 println!("{:?}", target_value); // => JsonValue::Number(42.0)
+
+// Modify value with index operator
+json["foo"]["bar"][0]["target"] = JsonValue::Null;
+println!("{:?}", json["foo"]["bar"][0]["target"]); // => JsonValue::Null
 ```
 
-Index access with `&str` key is available when the value is an object.  And Index access with `usize` is available when the value is an array.  They return the `&JsonValue` value if target value was found.  When the value for key or the element of index was not found, it will call `panic!`.
+Index access with `&str` key is available when the value is an object.  And index access with `usize` is available when the value is an array.  They return the `&JsonValue` value if target value was found.
+And modifying inner value directly with index access at right hand side of `=` is also available.  In both cases, it will call `panic!` when the value for key or the element of index was not found.
 
-`get()` method is provided to dereference the `enum` value (e.g. `JsonValue::Number(4.2)` -> `4.2`).
+`get()` and `get_mut()` methods are provided to dereference the `enum` value (e.g. `JsonValue::Number(4.2)` -> `4.2`).  `get()` method returns its dereferenced raw value.  It returns `Option<&T>` (`T` is corresponding value that you expected).  If `None` is returned, it means its type mismatched with your expected one.  Which type `get()` should dereference is inferred from how the returned value will be handled.  So you don't need to specify it explicitly.
+
+```rust
+use tinyjson::JsonValue;
+
+let json: JsonValue = r#"{
+  "num": 42,
+  "array": [1, true, "aaa"]
+}
+"#.parse().unwrap();
+
+// Refer mmutable inner value
+let num: &f64 = json["num"].get().expect("Number value");
+let arr: &Vec<_> = json["array"].get().expect("Array value");
+
+let mut json: JsonValue = r#"{
+  "num": 42,
+  "array": [1, true, "aaa"]
+}
+"#.parse().unwrap();
+
+// Refer mutable inner value
+let num: &mut f64 = json["num"].get_mut().expect("Number value");
+num = JsonValue::Boolean(false);
+```
 
 `JsonValue` implements [`TryInto`](https://doc.rust-lang.org/std/convert/trait.TryInto.html). It can convert `JsonValue` into inner value.
 
@@ -112,26 +142,11 @@ Index access with `&str` key is available when the value is an object.  And Inde
 use tinyjson::JsonValue;
 use std::convert::TryInto;
 
-let json: JsonValue = r#"
-{
-  "num": 42,
-  "array": [1, true, "aaa"],
-  "null": null
-}
-"#.parse().unwrap();
-
-// Refer inner value
-let ref num: f64 = json["num"].get().expect("Number value");
-let ref arr: Vec<_> = json["array"].get().expect("Array value");
-let ref null: () = json["null"].get().expect("Null value");
+let json: JsonValue = r#"{ "num": 42 }"#.parse().unwrap();
 
 // Move out inner value using try_into()
 let num: f64 = json["num"].try_into().expect("Number value");
-let arr: Vec<_> = json["array"].try_into().expect("Array value");
-let null: () = json["null"].try_into().expect("Null value");
 ```
-
-`get()` method returns its dereferenced raw value.  It returns `Option<&T>` (`T` is corresponding value that you expected).  If `None` is returned, it means its type mismatched with your expected one.  Which type `get()` should dereference is inferred from how the returned value will be handled.  So you need not to specify it explicitly.
 
 ### Equality of `JsonValue`
 
