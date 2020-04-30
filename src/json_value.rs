@@ -15,14 +15,15 @@ pub enum JsonValue {
     Object(HashMap<String, JsonValue>),
 }
 
-pub trait JsonValueAs {
+pub trait InnerAsRef {
     fn json_value_as(v: &JsonValue) -> Option<&Self>;
 }
 
-macro_rules! impl_json_value_as {
+macro_rules! impl_inner_ref {
     ($to:ty, $pat:pat => $val:expr) => {
-        impl JsonValueAs for $to {
+        impl InnerAsRef for $to {
             fn json_value_as(v: &JsonValue) -> Option<&$to> {
+                use JsonValue::*;
                 match v {
                     $pat => Some($val),
                     _ => None,
@@ -32,16 +33,44 @@ macro_rules! impl_json_value_as {
     };
 }
 
-impl_json_value_as!(f64, JsonValue::Number(n) => n);
-impl_json_value_as!(bool, JsonValue::Boolean(b) => b);
-impl_json_value_as!(String, JsonValue::String(s) => s);
-impl_json_value_as!((), JsonValue::Null => &NULL);
-impl_json_value_as!(Vec<JsonValue>, JsonValue::Array(a) => a);
-impl_json_value_as!(HashMap<String, JsonValue>, JsonValue::Object(h) => h);
+impl_inner_ref!(f64, Number(n) => n);
+impl_inner_ref!(bool, Boolean(b) => b);
+impl_inner_ref!(String, String(s) => s);
+impl_inner_ref!((), Null => &NULL);
+impl_inner_ref!(Vec<JsonValue>, Array(a) => a);
+impl_inner_ref!(HashMap<String, JsonValue>, Object(h) => h);
+
+pub trait InnerAsMut {
+    fn json_value_as_mut(v: &mut JsonValue) -> Option<&mut Self>;
+}
+
+macro_rules! impl_inner_ref_mut {
+    ($to:ty, $pat:pat => $val:expr) => {
+        impl InnerAsMut for $to {
+            fn json_value_as_mut(v: &mut JsonValue) -> Option<&mut $to> {
+                use JsonValue::*;
+                match v {
+                    $pat => Some($val),
+                    _ => None,
+                }
+            }
+        }
+    };
+}
+
+impl_inner_ref_mut!(f64, Number(n) => n);
+impl_inner_ref_mut!(bool, Boolean(b) => b);
+impl_inner_ref_mut!(String, String(s) => s);
+impl_inner_ref_mut!(Vec<JsonValue>, Array(a) => a);
+impl_inner_ref_mut!(HashMap<String, JsonValue>, Object(h) => h);
 
 impl JsonValue {
-    pub fn get<T: JsonValueAs>(&self) -> Option<&T> {
+    pub fn get<T: InnerAsRef>(&self) -> Option<&T> {
         T::json_value_as(self)
+    }
+
+    pub fn get_mut<T: InnerAsMut>(&mut self) -> Option<&mut T> {
+        T::json_value_as_mut(self)
     }
 
     pub fn is_bool(&self) -> bool {

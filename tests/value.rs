@@ -109,6 +109,15 @@ fn test_get() {
 }
 
 #[test]
+fn test_get_mut() {
+    let mut v = STR_OK.parse::<JsonValue>().unwrap();
+    let m: &mut HashMap<_, _> = v.get_mut().unwrap();
+    m.clear();
+    let m: &HashMap<_, _> = v.get().unwrap();
+    assert!(m.is_empty());
+}
+
+#[test]
 fn test_try_into() {
     use std::convert::TryInto;
 

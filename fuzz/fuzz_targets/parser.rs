@@ -6,11 +6,11 @@ use std::str;
 use tinyjson::JsonParseResult;
 
 fn print_bytes<W: Write>(mut w: W, b: &[u8]) {
-    w.write_all(b"let input = b\"").unwrap();
+    w.write_all(b"const INPUT: &[u8] = b\"").unwrap();
     for b in b.iter() {
         write!(w, "\\x{:02x}", b).unwrap();
     }
-    w.write_all(b"\"\n").unwrap();
+    w.write_all(b"\";\n").unwrap();
 }
 
 fuzz_target!(|data: &[u8]| {
