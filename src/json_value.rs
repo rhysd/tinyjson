@@ -1,7 +1,7 @@
 use crate::generator::{stringify, JsonGenerateResult};
 use std::collections::HashMap;
 use std::convert::TryInto;
-use std::ops::Index;
+use std::ops::{Index, IndexMut};
 
 const NULL: () = ();
 
@@ -142,15 +142,47 @@ impl<'a> Index<&'a str> for JsonValue {
 impl Index<usize> for JsonValue {
     type Output = JsonValue;
 
-    fn index(&self, i: usize) -> &'_ JsonValue {
+    fn index(&self, index: usize) -> &'_ JsonValue {
         let array = match self {
             JsonValue::Array(a) => a,
             _ => panic!(
-                "Attempted to access to an array but actually the value was {:?}",
-                self
+                "Attempted to access to an array with index {} but actually the value was {:?}",
+                index, self,
             ),
         };
-        &array[i]
+        &array[index]
+    }
+}
+
+impl<'a> IndexMut<&'a str> for JsonValue {
+    fn index_mut(&mut self, key: &'a str) -> &mut Self::Output {
+        let obj = match self {
+            JsonValue::Object(o) => o,
+            _ => panic!(
+                "Attempted to access to an object with key '{}' but actually it was {:?}",
+                key, self
+            ),
+        };
+
+        if let Some(json) = obj.get_mut(key) {
+            json
+        } else {
+            panic!("Key '{}' was not found in object", key)
+        }
+    }
+}
+
+impl IndexMut<usize> for JsonValue {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        let array = match self {
+            JsonValue::Array(a) => a,
+            _ => panic!(
+                "Attempted to access to an array with index {} but actually the value was {:?}",
+                index, self,
+            ),
+        };
+
+        &mut array[index]
     }
 }
 

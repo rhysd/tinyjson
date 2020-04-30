@@ -91,6 +91,25 @@ fn test_access_to_array_element_with_index() {
 }
 
 #[test]
+fn test_index_mut_object() {
+    let mut v: JsonValue = r#"{"foo": 42}"#.parse().unwrap();
+    assert_eq!(v["foo"], JsonValue::Number(42.0));
+    v["foo"] = JsonValue::Boolean(true);
+    assert_eq!(v["foo"], JsonValue::Boolean(true));
+}
+
+#[test]
+fn test_index_mut_array() {
+    let mut v: JsonValue = r#"["a", 1]"#.parse().unwrap();
+    assert_eq!(v[0], JsonValue::String("a".to_string()));
+    assert_eq!(v[1], JsonValue::Number(1.0));
+    v[0] = JsonValue::Null;
+    v[1] = JsonValue::Boolean(false);
+    assert_eq!(v[0], JsonValue::Null);
+    assert_eq!(v[1], JsonValue::Boolean(false));
+}
+
+#[test]
 #[should_panic]
 fn test_access_not_exist_value() {
     let parsed = STR_OK.parse::<JsonValue>().unwrap();
