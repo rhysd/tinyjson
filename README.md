@@ -20,6 +20,15 @@ Goals:
 
 Rust stable toolchain (no dependency).
 
+## Installation
+
+Add this crate to `dependencies` section of your `Cargo.toml`
+
+```toml
+[dependencies]
+tinyjson = "2"
+```
+
 ## Usage
 
 ### Parse JSON
@@ -180,10 +189,31 @@ println!("{}", str);
 - [x] Equality of `JsonValue`
 - [x] Index access to `JsonValue` (array, object)
 - [x] Tests
+- [x] Fuzzing
 
 ## Repository
 
 https://github.com/rhysd/tinyjson
+
+## Development
+
+```sh
+# Run tests
+cargo test
+
+# Run linters
+cargo clippy
+cargo fmt -- --check
+
+# Run fuzzer
+cargo +nightly fuzz run parser
+```
+
+Tools:
+
+- [clippy](https://github.com/rust-lang/rust-clippy)
+- [rustfmt](https://github.com/rust-lang/rustfmt)
+- [cargo-fuzz](https://github.com/rust-fuzz/cargo-fuzz)
 
 ## License
 
