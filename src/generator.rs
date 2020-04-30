@@ -47,11 +47,13 @@ fn quote(s: &str) -> String {
 fn array(array: &[JsonValue]) -> JsonGenerateResult {
     let mut to = '['.to_string();
     for elem in array.iter() {
-        let s: String = stringify(elem)?;
+        let s = stringify(elem)?;
         to += &s;
         to.push(',');
     }
-    to.pop(); // Remove trailing comma
+    if !array.is_empty() {
+        to.pop(); // Remove trailing comma
+    }
     to.push(']');
     Ok(to)
 }
@@ -61,11 +63,13 @@ fn object(m: &HashMap<String, JsonValue>) -> JsonGenerateResult {
     for (k, v) in m {
         to += &quote(k);
         to.push(':');
-        let s: String = stringify(v)?;
+        let s = stringify(v)?;
         to += &s;
         to.push(',');
     }
-    to.pop(); // Remove trailing comma
+    if !m.is_empty() {
+        to.pop(); // Remove trailing comma
+    }
     to.push('}');
     Ok(to)
 }

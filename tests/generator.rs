@@ -52,8 +52,11 @@ fn test_array() {
         JsonValue::Boolean(false),
         JsonValue::Null,
     ]);
-    let s: String = v.stringify().unwrap();
+    let s = v.stringify().unwrap();
     assert_eq!(&s, "[1,false,null]");
+    let v = JsonValue::Array(vec![]);
+    let s = v.stringify().unwrap();
+    assert_eq!(&s, "[]");
 }
 
 #[test]
@@ -63,10 +66,13 @@ fn test_bject() {
     m.insert("bar".to_string(), JsonValue::Boolean(false));
     m.insert("piyo".to_string(), JsonValue::Null);
     let v = JsonValue::Object(m);
-    let s: String = v.stringify().unwrap();
+    let s = v.stringify().unwrap();
     assert!(s.starts_with('{'));
     assert!(s.contains(r#""foo":1"#));
     assert!(s.contains(r#""bar":false"#));
     assert!(s.contains(r#""piyo":null"#));
     assert!(s.ends_with('}'));
+    let v = JsonValue::Object(HashMap::new());
+    let s = v.stringify().unwrap();
+    assert_eq!(&s, "{}");
 }
