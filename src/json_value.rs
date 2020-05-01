@@ -123,7 +123,7 @@ impl JsonValue {
 impl<'a> Index<&'a str> for JsonValue {
     type Output = JsonValue;
 
-    fn index(&self, key: &'a str) -> &JsonValue {
+    fn index(&self, key: &'a str) -> &Self::Output {
         let obj = match self {
             JsonValue::Object(o) => o,
             _ => panic!(
@@ -142,7 +142,7 @@ impl<'a> Index<&'a str> for JsonValue {
 impl Index<usize> for JsonValue {
     type Output = JsonValue;
 
-    fn index(&self, index: usize) -> &'_ JsonValue {
+    fn index(&self, index: usize) -> &'_ Self::Output {
         let array = match self {
             JsonValue::Array(a) => a,
             _ => panic!(

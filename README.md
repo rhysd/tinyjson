@@ -197,6 +197,16 @@ let str = parsed.stringify().unwrap();
 println!("{}", str);
 ```
 
+## Examples
+
+Working examples are put in [`examples` directory](./examples). They can be run with `cargo run --example`.
+
+```sh
+echo '{"hello": "world"}' | cargo run --example parse
+echo '["foo",  42,    null ]' | cargo run --example minify
+cargo run --example json_value
+```
+
 ## TODO
 
 - [x] Parser
