@@ -34,3 +34,34 @@ jobs:
           cargo clippy --version
       - run: cargo fmt -- --color always --check
       - run: cargo clippy --color always --all -- -D warnings
+  examples:
+    name: examples
+    strategy:
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Rust toolchain
+        run: |
+          rustup set profile minimal
+          rustup update stable
+          rustup default stable
+          rustc --version
+          cargo --version
+      - name: Run parse example
+        run: |
+          ret="$(echo '{"hello": "world"}' | cargo run --example parse)"
+          if [[ "$ret" != 'Parsed: Object({"hello": String("world")})' ]]; then
+            echo "Error: '$ret'" 2>&1
+            exit 1
+          fi
+      - name: Run minify example
+        run: |
+          ret="$(echo ' {  "hello" : "world"         }   ' | cargo run --example minify)"
+          if [[ "$ret" != '{"hello":"world"}' ]]; then
+            echo "Error: '$ret'" 2>&1
+            exit 1
+          fi
+      - name: Run json_value example
+        run: |
+          cargo run --example json_value
