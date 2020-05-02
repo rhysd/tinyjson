@@ -64,6 +64,18 @@ impl_inner_ref_mut!(String, String(s) => s);
 impl_inner_ref_mut!(Vec<JsonValue>, Array(a) => a);
 impl_inner_ref_mut!(HashMap<String, JsonValue>, Object(h) => h);
 
+// Note: matches! is available from Rust 1.42
+macro_rules! is_xxx {
+    ($name:ident, $variant:pat) => {
+        pub fn $name(&self) -> bool {
+            match self {
+                $variant => true,
+                _ => false,
+            }
+        }
+    };
+}
+
 impl JsonValue {
     pub fn get<T: InnerAsRef>(&self) -> Option<&T> {
         T::json_value_as(self)
@@ -73,47 +85,12 @@ impl JsonValue {
         T::json_value_as_mut(self)
     }
 
-    pub fn is_bool(&self) -> bool {
-        match self {
-            JsonValue::Boolean(_) => true,
-            _ => false,
-        }
-    }
-
-    pub fn is_number(&self) -> bool {
-        match self {
-            JsonValue::Number(_) => true,
-            _ => false,
-        }
-    }
-
-    pub fn is_string(&self) -> bool {
-        match self {
-            JsonValue::String(_) => true,
-            _ => false,
-        }
-    }
-
-    pub fn is_null(&self) -> bool {
-        match self {
-            JsonValue::Null => true,
-            _ => false,
-        }
-    }
-
-    pub fn is_array(&self) -> bool {
-        match self {
-            JsonValue::Array(_) => true,
-            _ => false,
-        }
-    }
-
-    pub fn is_object(&self) -> bool {
-        match self {
-            JsonValue::Object(_) => true,
-            _ => false,
-        }
-    }
+    is_xxx!(is_bool, JsonValue::Boolean(_));
+    is_xxx!(is_number, JsonValue::Number(_));
+    is_xxx!(is_string, JsonValue::String(_));
+    is_xxx!(is_null, JsonValue::Null);
+    is_xxx!(is_array, JsonValue::Array(_));
+    is_xxx!(is_object, JsonValue::Object(_));
 
     pub fn stringify(&self) -> JsonGenerateResult {
         stringify(self)
