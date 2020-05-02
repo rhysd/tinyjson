@@ -162,3 +162,26 @@ fn test_try_into() {
     let v: HashMap<_, _> = JsonValue::Object(m.clone()).try_into().unwrap();
     assert_eq!(v, m);
 }
+
+#[test]
+fn test_is_xxx() {
+    use JsonValue::*;
+
+    assert!(Number(1.0).is_number());
+    assert!(!Boolean(true).is_number());
+
+    assert!(Boolean(true).is_bool());
+    assert!(!Number(1.0).is_bool());
+
+    assert!(String("hi".to_string()).is_string());
+    assert!(!Number(1.0).is_string());
+
+    assert!(Null.is_null());
+    assert!(!Number(1.0).is_null());
+
+    assert!(Array(vec![]).is_array());
+    assert!(!Number(1.0).is_array());
+
+    assert!(Object(HashMap::new()).is_object());
+    assert!(!Number(1.0).is_object());
+}
