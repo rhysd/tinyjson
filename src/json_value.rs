@@ -40,13 +40,13 @@ impl_inner_ref!((), Null => &NULL);
 impl_inner_ref!(Vec<JsonValue>, Array(a) => a);
 impl_inner_ref!(HashMap<String, JsonValue>, Object(h) => h);
 
-pub trait InnerAsMut {
+pub trait InnerAsRefMut {
     fn json_value_as_mut(v: &mut JsonValue) -> Option<&mut Self>;
 }
 
 macro_rules! impl_inner_ref_mut {
     ($to:ty, $pat:pat => $val:expr) => {
-        impl InnerAsMut for $to {
+        impl InnerAsRefMut for $to {
             fn json_value_as_mut(v: &mut JsonValue) -> Option<&mut $to> {
                 use JsonValue::*;
                 match v {
@@ -81,7 +81,7 @@ impl JsonValue {
         T::json_value_as(self)
     }
 
-    pub fn get_mut<T: InnerAsMut>(&mut self) -> Option<&mut T> {
+    pub fn get_mut<T: InnerAsRefMut>(&mut self) -> Option<&mut T> {
         T::json_value_as_mut(self)
     }
 

@@ -7,5 +7,5 @@ mod json_value;
 mod parser;
 
 pub use generator::*;
-pub use json_value::{InnerAsRef, JsonValue, UnexpectedValue};
+pub use json_value::{InnerAsRef, InnerAsRefMut, JsonValue, UnexpectedValue};
 pub use parser::*;
