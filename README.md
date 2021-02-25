@@ -8,7 +8,7 @@ tinyjson
 Goals:
 
 - Using Stable APIs; using no experimental APIs, no compiler plugin
-- Reasonable simple JSON object interface; not serialize/deserialize JSON format to some specific `struct`
+- Reasonable simple JSON object interface
 - No crate dependencies at runtime
 - Well tested with famous JSON test suites
   - [JSON checker in json.org](http://www.json.org/JSON_checker/)
@@ -107,8 +107,7 @@ json["foo"]["bar"][0]["target"] = JsonValue::Null;
 println!("{:?}", json["foo"]["bar"][0]["target"]); // => JsonValue::Null
 ```
 
-Index access with `&str` key is available when the value is an object.  And index access with `usize` is available when the value is an array.  They return the `&JsonValue` value if target value was found.
-And modifying inner value directly with index access at right hand side of `=` is also available.  In both cases, it will call `panic!` when the value for key or the element of index was not found.
+Index access with `&str` key is available when the value is an object.  And index access with `usize` is available when the value is an array.  They return the `&JsonValue` value if target value was found.  And modifying inner value directly with index access at right hand side of `=` is also available.  Note that it can modify value of objects but cannot add new key.  In both cases, it will call `panic!` when the value for key or the element of index was not found.
 
 `get()` and `get_mut()` methods are provided to dereference the `enum` value (e.g. `JsonValue::Number(4.2)` -> `4.2`).  `get()` method returns its dereferenced raw value.  It returns `Option<&T>` (`T` is corresponding value that you expected).  If `None` is returned, it means its type mismatched with your expected one.  Which type `get()` should dereference is inferred from how the returned value will be handled.  So you don't need to specify it explicitly.
 
@@ -125,7 +124,8 @@ let json: JsonValue = r#"{
 let num: &f64 = json["num"].get().expect("Number value");
 let arr: &Vec<_> = json["array"].get().expect("Array value");
 
-let mut json: JsonValue = r#"{
+let mut json: JsonValue = r#"
+{
   "num": 42,
   "array": [1, true, "aaa"]
 }
