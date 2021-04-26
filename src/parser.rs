@@ -1,5 +1,6 @@
 use std::char;
 use std::collections::HashMap;
+use std::error;
 use std::fmt;
 use std::iter::Peekable;
 use std::str::FromStr;
@@ -28,6 +29,8 @@ impl fmt::Display for JsonParseError {
         )
     }
 }
+
+impl error::Error for JsonParseError {}
 
 pub type JsonParseResult = Result<JsonValue, JsonParseError>;
 
