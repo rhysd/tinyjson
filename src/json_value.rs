@@ -1,6 +1,8 @@
 use crate::generator::{stringify, JsonGenerateResult};
 use std::collections::HashMap;
 use std::convert::TryInto;
+use std::error;
+use std::fmt;
 use std::ops::{Index, IndexMut};
 
 const NULL: () = ();
@@ -165,6 +167,14 @@ impl IndexMut<usize> for JsonValue {
 
 #[derive(Debug)]
 pub struct UnexpectedValue(JsonValue);
+
+impl fmt::Display for UnexpectedValue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Unexpected value: {:?}", self.0)
+    }
+}
+
+impl error::Error for UnexpectedValue {}
 
 macro_rules! impl_try_into {
     ($ty:ty, $pat:pat => $val:expr) => {
