@@ -166,11 +166,18 @@ impl IndexMut<usize> for JsonValue {
 }
 
 #[derive(Debug)]
-pub struct UnexpectedValue(JsonValue);
+pub struct UnexpectedValue {
+    value: JsonValue,
+    expected: &'static str,
+}
 
 impl fmt::Display for UnexpectedValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Unexpected value: {:?}", self.0)
+        write!(
+            f,
+            "Unexpected JSON value: {:?}. Expected {} value",
+            self.value, self.expected
+        )
     }
 }
 
@@ -184,7 +191,10 @@ macro_rules! impl_try_into {
             fn try_into(self) -> Result<$ty, UnexpectedValue> {
                 match self {
                     $pat => Ok($val),
-                    v => Err(UnexpectedValue(v)),
+                    v => Err(UnexpectedValue {
+                        value: v,
+                        expected: stringify!($ty),
+                    }),
                 }
             }
         }
