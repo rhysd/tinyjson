@@ -171,10 +171,8 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
             return Ok(JsonValue::Array(vec![]));
         }
 
-        let mut v = vec![];
+        let mut v = vec![self.parse_any()?];
         loop {
-            v.push(self.parse_any()?);
-
             match self.consume()? {
                 ',' => {}
                 ']' => return Ok(JsonValue::Array(v)),
@@ -185,6 +183,8 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
                     ))
                 }
             }
+
+            v.push(self.parse_any()?); // Next element
         }
     }
 
