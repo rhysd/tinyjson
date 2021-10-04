@@ -1,6 +1,5 @@
 use std::char;
 use std::collections::HashMap;
-use std::error;
 use std::fmt;
 use std::iter::Peekable;
 use std::str::FromStr;
@@ -30,7 +29,7 @@ impl fmt::Display for JsonParseError {
     }
 }
 
-impl error::Error for JsonParseError {}
+impl std::error::Error for JsonParseError {}
 
 pub type JsonParseResult = Result<JsonValue, JsonParseError>;
 
@@ -193,7 +192,7 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
             return Ok(());
         }
 
-        match String::from_utf16(&utf16) {
+        match String::from_utf16(utf16) {
             Ok(utf8) => s.push_str(&utf8),
             Err(err) => return self.err(format!("Invalid UTF-16 sequence {:?}: {}", &utf16, err)),
         }

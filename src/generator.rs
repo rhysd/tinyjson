@@ -1,6 +1,5 @@
 use crate::JsonValue;
 use std::collections::HashMap;
-use std::error;
 use std::fmt;
 
 #[derive(Debug)]
@@ -14,7 +13,7 @@ impl JsonGenerateError {
     }
 
     pub fn message(&self) -> &str {
-        &self.msg
+        self.msg
     }
 }
 
@@ -24,7 +23,7 @@ impl fmt::Display for JsonGenerateError {
     }
 }
 
-impl error::Error for JsonGenerateError {}
+impl std::error::Error for JsonGenerateError {}
 
 pub type JsonGenerateResult = Result<String, JsonGenerateError>;
 

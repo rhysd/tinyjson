@@ -1,7 +1,6 @@
 use crate::generator::{stringify, JsonGenerateResult};
 use std::collections::HashMap;
 use std::convert::TryInto;
-use std::error;
 use std::fmt;
 use std::ops::{Index, IndexMut};
 
@@ -181,7 +180,7 @@ impl fmt::Display for UnexpectedValue {
     }
 }
 
-impl error::Error for UnexpectedValue {}
+impl std::error::Error for UnexpectedValue {}
 
 macro_rules! impl_try_into {
     ($ty:ty, $pat:pat => $val:expr) => {
