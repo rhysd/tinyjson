@@ -170,6 +170,12 @@ pub struct UnexpectedValue {
     expected: &'static str,
 }
 
+impl UnexpectedValue {
+    pub fn value(&self) -> &JsonValue {
+        &self.value
+    }
+}
+
 impl fmt::Display for UnexpectedValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -181,6 +187,12 @@ impl fmt::Display for UnexpectedValue {
 }
 
 impl std::error::Error for UnexpectedValue {}
+
+impl From<UnexpectedValue> for JsonValue {
+    fn from(err: UnexpectedValue) -> Self {
+        err.value
+    }
+}
 
 macro_rules! impl_try_into {
     ($ty:ty, $pat:pat => $val:expr) => {

@@ -17,6 +17,14 @@ impl JsonParseError {
     fn new(msg: String, line: usize, col: usize) -> JsonParseError {
         JsonParseError { msg, line, col }
     }
+
+    pub fn line(&self) -> usize {
+        self.line
+    }
+
+    pub fn column(&self) -> usize {
+        self.col
+    }
 }
 
 impl fmt::Display for JsonParseError {
