@@ -113,7 +113,7 @@ fn test_index_mut_array() {
 #[should_panic]
 fn test_access_not_exist_value() {
     let parsed = STR_OK.parse::<JsonValue>().unwrap();
-    &parsed["unknown key"]["not exist key"];
+    let _ = parsed["unknown key"]["not exist key"];
 }
 
 #[test]
