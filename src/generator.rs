@@ -28,6 +28,8 @@ impl std::error::Error for JsonGenerateError {}
 pub type JsonGenerateResult = Result<String, JsonGenerateError>;
 
 fn quote(s: &str) -> String {
+    use std::fmt::Write;
+
     let mut to = '"'.to_string();
     for c in s.chars() {
         match c {
@@ -38,7 +40,7 @@ fn quote(s: &str) -> String {
             '\r' => to.push_str("\\r"),
             '\t' => to.push_str("\\t"),
             '"' => to.push_str("\\\""),
-            c if c.is_control() => to.push_str(&format!("\\u{:04x}", c as u32)),
+            c if c.is_control() => write!(&mut to, "\\u{:04x}", c as u32).unwrap(),
             c => to.push(c),
         }
     }
