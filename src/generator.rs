@@ -1,19 +1,16 @@
 use crate::JsonValue;
 use std::collections::HashMap;
 use std::fmt;
+use std::io::{self, Write};
 
 #[derive(Debug)]
 pub struct JsonGenerateError {
-    msg: &'static str,
+    msg: String,
 }
 
 impl JsonGenerateError {
-    fn new(msg: &'static str) -> Self {
-        JsonGenerateError { msg }
-    }
-
     pub fn message(&self) -> &str {
-        self.msg
+        self.msg.as_str()
     }
 }
 
@@ -25,76 +22,104 @@ impl fmt::Display for JsonGenerateError {
 
 impl std::error::Error for JsonGenerateError {}
 
-pub type JsonGenerateResult = Result<String, JsonGenerateError>;
-
-fn quote(s: &str) -> String {
-    use std::fmt::Write;
-
-    let mut to = '"'.to_string();
-    for c in s.chars() {
-        match c {
-            '\\' => to.push_str("\\\\"),
-            '\u{0008}' => to.push_str("\\b"),
-            '\u{000c}' => to.push_str("\\f"),
-            '\n' => to.push_str("\\n"),
-            '\r' => to.push_str("\\r"),
-            '\t' => to.push_str("\\t"),
-            '"' => to.push_str("\\\""),
-            c if c.is_control() => write!(&mut to, "\\u{:04x}", c as u32).unwrap(),
-            c => to.push(c),
+impl From<io::Error> for JsonGenerateError {
+    fn from(err: io::Error) -> Self {
+        Self {
+            msg: format!("I/O error while writing output: {}", err),
         }
     }
-    to.push('"');
-    to
 }
 
-fn array(array: &[JsonValue]) -> JsonGenerateResult {
-    let mut to = '['.to_string();
+impl From<fmt::Error> for JsonGenerateError {
+    fn from(err: fmt::Error) -> Self {
+        Self {
+            msg: format!("Format error while writing output: {}", err),
+        }
+    }
+}
+
+pub type JsonGenerateResult = Result<String, JsonGenerateError>;
+type EncodeResult = Result<(), JsonGenerateError>;
+
+fn quote<W: Write>(w: &mut W, s: &str) -> EncodeResult {
+    w.write_all(b"\"")?;
+    for c in s.chars() {
+        match c {
+            '\\' => w.write_all(b"\\\\")?,
+            '\u{0008}' => w.write_all(b"\\b")?,
+            '\u{000c}' => w.write_all(b"\\f")?,
+            '\n' => w.write_all(b"\\n")?,
+            '\r' => w.write_all(b"\\r")?,
+            '\t' => w.write_all(b"\\t")?,
+            '"' => w.write_all(b"\\\"")?,
+            c if c.is_control() => write!(w, "\\u{:04x}", c as u32)?,
+            c => write!(w, "{}", c)?,
+        }
+    }
+    w.write_all(b"\"")?;
+    Ok(())
+}
+
+fn array<W: Write>(w: &mut W, array: &[JsonValue]) -> EncodeResult {
+    w.write_all(b"[")?;
+    let mut first = true;
     for elem in array.iter() {
-        let s = stringify(elem)?;
-        to += &s;
-        to.push(',');
+        if first {
+            first = false;
+        } else {
+            w.write_all(b",")?;
+        }
+        encode(w, elem)?;
     }
-    if !array.is_empty() {
-        to.pop(); // Remove trailing comma
-    }
-    to.push(']');
-    Ok(to)
+    w.write_all(b"]")?;
+    Ok(())
 }
 
-fn object(m: &HashMap<String, JsonValue>) -> JsonGenerateResult {
-    let mut to = '{'.to_string();
+fn object<W: Write>(w: &mut W, m: &HashMap<String, JsonValue>) -> EncodeResult {
+    w.write_all(b"{")?;
+    let mut first = true;
     for (k, v) in m {
-        to += &quote(k);
-        to.push(':');
-        let s = stringify(v)?;
-        to += &s;
-        to.push(',');
+        if first {
+            first = false;
+        } else {
+            w.write_all(b",")?;
+        }
+        quote(w, k)?;
+        w.write_all(b":")?;
+        encode(w, v)?;
     }
-    if !m.is_empty() {
-        to.pop(); // Remove trailing comma
-    }
-    to.push('}');
-    Ok(to)
+    w.write_all(b"}")?;
+    Ok(())
 }
 
-fn number(f: f64) -> JsonGenerateResult {
+fn number<W: Write>(w: &mut W, f: f64) -> EncodeResult {
     if f.is_infinite() {
-        Err(JsonGenerateError::new("JSON cannot represent inf"))
+        Err(JsonGenerateError {
+            msg: "JSON cannot represent inf".to_string(),
+        })
     } else if f.is_nan() {
-        Err(JsonGenerateError::new("JSON cannot represent NaN"))
+        Err(JsonGenerateError {
+            msg: "JSON cannot represent NaN".to_string(),
+        })
     } else {
-        Ok(f.to_string())
+        write!(w, "{}", f)?;
+        Ok(())
+    }
+}
+
+pub fn encode<W: Write>(w: &mut W, value: &JsonValue) -> EncodeResult {
+    match value {
+        JsonValue::Number(n) => number(w, *n),
+        JsonValue::Boolean(b) => Ok(write!(w, "{}", *b)?),
+        JsonValue::String(s) => quote(w, s),
+        JsonValue::Null => Ok(w.write_all(b"null")?),
+        JsonValue::Array(a) => array(w, a),
+        JsonValue::Object(o) => object(w, o),
     }
 }
 
 pub fn stringify(value: &JsonValue) -> JsonGenerateResult {
-    match value {
-        JsonValue::Number(n) => number(*n),
-        JsonValue::Boolean(b) => Ok(b.to_string()),
-        JsonValue::String(s) => Ok(quote(s)),
-        JsonValue::Null => Ok("null".to_string()),
-        JsonValue::Array(a) => array(a),
-        JsonValue::Object(o) => object(o),
-    }
+    let mut to = Vec::new();
+    encode(&mut to, value)?;
+    Ok(String::from_utf8(to).unwrap())
 }
