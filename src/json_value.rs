@@ -1,7 +1,8 @@
-use crate::generator::{stringify, JsonGenerateResult};
+use crate::generator::{encode, stringify, JsonGenerateResult};
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::fmt;
+use std::io;
 use std::ops::{Index, IndexMut};
 
 const NULL: () = ();
@@ -95,6 +96,10 @@ impl JsonValue {
 
     pub fn stringify(&self) -> JsonGenerateResult {
         stringify(self)
+    }
+
+    pub fn write_to<W: io::Write>(&self, w: &mut W) -> io::Result<()> {
+        encode(w, self)
     }
 }
 

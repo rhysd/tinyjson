@@ -22,26 +22,9 @@ impl fmt::Display for JsonGenerateError {
 
 impl std::error::Error for JsonGenerateError {}
 
-impl From<io::Error> for JsonGenerateError {
-    fn from(err: io::Error) -> Self {
-        Self {
-            msg: format!("I/O error while writing output: {}", err),
-        }
-    }
-}
-
-impl From<fmt::Error> for JsonGenerateError {
-    fn from(err: fmt::Error) -> Self {
-        Self {
-            msg: format!("Format error while writing output: {}", err),
-        }
-    }
-}
-
 pub type JsonGenerateResult = Result<String, JsonGenerateError>;
-type EncodeResult = Result<(), JsonGenerateError>;
 
-fn quote<W: Write>(w: &mut W, s: &str) -> EncodeResult {
+fn quote<W: Write>(w: &mut W, s: &str) -> io::Result<()> {
     w.write_all(b"\"")?;
     for c in s.chars() {
         match c {
@@ -60,7 +43,7 @@ fn quote<W: Write>(w: &mut W, s: &str) -> EncodeResult {
     Ok(())
 }
 
-fn array<W: Write>(w: &mut W, array: &[JsonValue]) -> EncodeResult {
+fn array<W: Write>(w: &mut W, array: &[JsonValue]) -> io::Result<()> {
     w.write_all(b"[")?;
     let mut first = true;
     for elem in array.iter() {
@@ -75,7 +58,7 @@ fn array<W: Write>(w: &mut W, array: &[JsonValue]) -> EncodeResult {
     Ok(())
 }
 
-fn object<W: Write>(w: &mut W, m: &HashMap<String, JsonValue>) -> EncodeResult {
+fn object<W: Write>(w: &mut W, m: &HashMap<String, JsonValue>) -> io::Result<()> {
     w.write_all(b"{")?;
     let mut first = true;
     for (k, v) in m {
@@ -92,22 +75,24 @@ fn object<W: Write>(w: &mut W, m: &HashMap<String, JsonValue>) -> EncodeResult {
     Ok(())
 }
 
-fn number<W: Write>(w: &mut W, f: f64) -> EncodeResult {
+fn number<W: Write>(w: &mut W, f: f64) -> io::Result<()> {
     if f.is_infinite() {
-        Err(JsonGenerateError {
-            msg: "JSON cannot represent inf".to_string(),
-        })
+        Err(io::Error::new(
+            io::ErrorKind::Other,
+            "JSON cannot represent inf",
+        ))
     } else if f.is_nan() {
-        Err(JsonGenerateError {
-            msg: "JSON cannot represent NaN".to_string(),
-        })
+        Err(io::Error::new(
+            io::ErrorKind::Other,
+            "JSON cannot represent NaN",
+        ))
     } else {
         write!(w, "{}", f)?;
         Ok(())
     }
 }
 
-pub fn encode<W: Write>(w: &mut W, value: &JsonValue) -> EncodeResult {
+pub(crate) fn encode<W: Write>(w: &mut W, value: &JsonValue) -> io::Result<()> {
     match value {
         JsonValue::Number(n) => number(w, *n),
         JsonValue::Boolean(b) => Ok(write!(w, "{}", *b)?),
@@ -120,6 +105,8 @@ pub fn encode<W: Write>(w: &mut W, value: &JsonValue) -> EncodeResult {
 
 pub fn stringify(value: &JsonValue) -> JsonGenerateResult {
     let mut to = Vec::new();
-    encode(&mut to, value)?;
+    encode(&mut to, value).map_err(|err| JsonGenerateError {
+        msg: format!("{}", err),
+    })?;
     Ok(String::from_utf8(to).unwrap())
 }
