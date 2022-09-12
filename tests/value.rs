@@ -185,3 +185,30 @@ fn test_is_xxx() {
     assert!(Object(HashMap::new()).is_object());
     assert!(!Number(1.0).is_object());
 }
+
+#[test]
+fn test_parse_stringify() {
+    for input in [
+        "{}",
+        r#"{"foo":1}"#,
+        r#"{"a":{"b":{"c":{}}}}"#,
+        "[]",
+        r#"[1,"aaa",true,null]"#,
+        "[[[[]]]]",
+        "1",
+        "3.14",
+        "true",
+        "false",
+        "null",
+    ] {
+        let v: JsonValue = input.parse().unwrap();
+
+        let output = v.stringify().unwrap();
+        assert_eq!(output, input);
+
+        let mut vec = vec![];
+        v.write_to(&mut vec).unwrap();
+        let output = String::from_utf8(vec).unwrap();
+        assert_eq!(output, input);
+    }
+}
