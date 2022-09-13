@@ -126,7 +126,6 @@ impl<'indent, W: Write> JsonGenerator<'indent, W> {
             return self.out.write_all(b"[]");
         }
 
-        self.write_indent(indent, level)?;
         self.out.write_all(b"[\n")?;
         let mut first = true;
         for elem in array.iter() {
@@ -138,6 +137,7 @@ impl<'indent, W: Write> JsonGenerator<'indent, W> {
             self.write_indent(indent, level + 1)?;
             self.format(elem, indent, level + 1)?;
         }
+        self.out.write_all(b"\n")?;
         self.write_indent(indent, level)?;
         self.out.write_all(b"]")
     }
@@ -152,7 +152,6 @@ impl<'indent, W: Write> JsonGenerator<'indent, W> {
             return self.out.write_all(b"{}");
         }
 
-        self.write_indent(indent, level)?;
         self.out.write_all(b"{\n")?;
         let mut first = true;
         for (k, v) in m {
@@ -166,6 +165,7 @@ impl<'indent, W: Write> JsonGenerator<'indent, W> {
             self.out.write_all(b": ")?;
             self.format(v, indent, level + 1)?;
         }
+        self.out.write_all(b"\n")?;
         self.write_indent(indent, level)?;
         self.out.write_all(b"}")
     }

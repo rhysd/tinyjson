@@ -200,6 +200,7 @@ fn test_parse_stringify() {
         "true",
         "false",
         "null",
+        r#""aaa""#,
     ] {
         let v: JsonValue = input.parse().unwrap();
 
@@ -210,5 +211,39 @@ fn test_parse_stringify() {
         v.write_to(&mut vec).unwrap();
         let output = String::from_utf8(vec).unwrap();
         assert_eq!(output, input);
+    }
+}
+
+#[test]
+fn test_parse_format() {
+    for (input, expected) in [
+        ("{}", "{}"),
+        (r#"{"foo":1}"#, "{\n  \"foo\": 1\n}"),
+        (
+            r#"{"a":{"b":{"c":{}}}}"#,
+            "{\n  \"a\": {\n    \"b\": {\n      \"c\": {}\n    }\n  }\n}",
+        ),
+        ("[]", "[]"),
+        (
+            r#"[1,"aaa",true,null]"#,
+            "[\n  1,\n  \"aaa\",\n  true,\n  null\n]",
+        ),
+        ("[[[[]]]]", "[\n  [\n    [\n      []\n    ]\n  ]\n]"),
+        ("1", "1"),
+        ("3.14", "3.14"),
+        ("true", "true"),
+        ("false", "false"),
+        ("null", "null"),
+        (r#""aaa""#, r#""aaa""#),
+    ] {
+        let v: JsonValue = input.parse().unwrap();
+
+        let output = v.format().unwrap();
+        assert_eq!(output, expected);
+
+        let mut vec = vec![];
+        v.format_to(&mut vec).unwrap();
+        let output = String::from_utf8(vec).unwrap();
+        assert_eq!(output, expected);
     }
 }
