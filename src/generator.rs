@@ -39,8 +39,7 @@ fn quote<W: Write>(w: &mut W, s: &str) -> io::Result<()> {
             c => write!(w, "{}", c)?,
         }
     }
-    w.write_all(b"\"")?;
-    Ok(())
+    w.write_all(b"\"")
 }
 
 fn array<W: Write>(w: &mut W, array: &[JsonValue]) -> io::Result<()> {
@@ -54,8 +53,7 @@ fn array<W: Write>(w: &mut W, array: &[JsonValue]) -> io::Result<()> {
         }
         encode(w, elem)?;
     }
-    w.write_all(b"]")?;
-    Ok(())
+    w.write_all(b"]")
 }
 
 fn object<W: Write>(w: &mut W, m: &HashMap<String, JsonValue>) -> io::Result<()> {
@@ -71,8 +69,7 @@ fn object<W: Write>(w: &mut W, m: &HashMap<String, JsonValue>) -> io::Result<()>
         w.write_all(b":")?;
         encode(w, v)?;
     }
-    w.write_all(b"}")?;
-    Ok(())
+    w.write_all(b"}")
 }
 
 fn number<W: Write>(w: &mut W, f: f64) -> io::Result<()> {
@@ -87,17 +84,16 @@ fn number<W: Write>(w: &mut W, f: f64) -> io::Result<()> {
             "JSON cannot represent NaN",
         ))
     } else {
-        write!(w, "{}", f)?;
-        Ok(())
+        write!(w, "{}", f)
     }
 }
 
 pub(crate) fn encode<W: Write>(w: &mut W, value: &JsonValue) -> io::Result<()> {
     match value {
         JsonValue::Number(n) => number(w, *n),
-        JsonValue::Boolean(b) => Ok(write!(w, "{}", *b)?),
+        JsonValue::Boolean(b) => write!(w, "{}", *b),
         JsonValue::String(s) => quote(w, s),
-        JsonValue::Null => Ok(w.write_all(b"null")?),
+        JsonValue::Null => w.write_all(b"null"),
         JsonValue::Array(a) => array(w, a),
         JsonValue::Object(o) => object(w, o),
     }
