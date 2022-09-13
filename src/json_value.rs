@@ -1,4 +1,4 @@
-use crate::generator::{encode, stringify, JsonGenerateResult};
+use crate::generator::{stringify, JsonGenerateResult, JsonGenerator};
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::fmt;
@@ -99,7 +99,8 @@ impl JsonValue {
     }
 
     pub fn write_to<W: io::Write>(&self, w: &mut W) -> io::Result<()> {
-        encode(w, self)
+        let mut gen = JsonGenerator::new(w);
+        gen.generate(self)
     }
 }
 
