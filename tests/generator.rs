@@ -60,7 +60,7 @@ fn test_array() {
 }
 
 #[test]
-fn test_bject() {
+fn test_object() {
     let mut m = HashMap::new();
     m.insert("foo".to_string(), JsonValue::Number(1.0));
     m.insert("bar".to_string(), JsonValue::Boolean(false));
@@ -74,5 +74,90 @@ fn test_bject() {
     assert!(s.ends_with('}'));
     let v = JsonValue::Object(HashMap::new());
     let s = v.stringify().unwrap();
+    assert_eq!(&s, "{}");
+}
+
+fn undent(s: &str) -> String {
+    let idx = s.find(|c| c != ' ' && c != '\n').unwrap();
+    let indent = &s[..idx];
+    s.replace(indent, "\n").trim().to_string()
+}
+
+#[test]
+fn test_format_array() {
+    let v = JsonValue::Array(vec![
+        JsonValue::Number(1.0),
+        JsonValue::Boolean(false),
+        JsonValue::Null,
+    ]);
+    let s = v.format().unwrap();
+    assert_eq!(
+        s,
+        undent(
+            "
+        [
+          1,
+          false,
+          null
+        ]
+        "
+        ),
+    );
+
+    let v = JsonValue::Array(vec![
+        JsonValue::Number(1.0),
+        JsonValue::Array(vec![
+            JsonValue::Array(vec![
+                {
+                    let mut m = HashMap::new();
+                    m.insert("foo".to_string(), JsonValue::String("bar".to_string()));
+                    JsonValue::Object(m)
+                },
+                JsonValue::Null,
+            ]),
+            JsonValue::Boolean(false),
+        ]),
+    ]);
+    let s = v.format().unwrap();
+    assert_eq!(
+        s,
+        undent(
+            "
+        [
+          1,
+          [
+            [
+              {
+                \"foo\": \"bar\"
+              },
+              null
+            ],
+            false
+          ]
+        ]
+        "
+        ),
+    );
+
+    let v = JsonValue::Array(vec![]);
+    let s = v.stringify().unwrap();
+    assert_eq!(&s, "[]");
+}
+
+#[test]
+fn test_format_object() {
+    let mut m = HashMap::new();
+    m.insert("foo".to_string(), JsonValue::Number(1.0));
+    m.insert("bar".to_string(), JsonValue::Boolean(false));
+    m.insert("piyo".to_string(), JsonValue::Null);
+    let v = JsonValue::Object(m);
+    let s = v.format().unwrap();
+    assert!(s.starts_with('{'));
+    assert!(s.contains(r#"  "foo": 1"#));
+    assert!(s.contains(r#"  "bar": false"#));
+    assert!(s.contains(r#"  "piyo": null"#));
+    assert!(s.ends_with('}'));
+    let v = JsonValue::Object(HashMap::new());
+    let s = v.format().unwrap();
     assert_eq!(&s, "{}");
 }
