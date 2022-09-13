@@ -175,7 +175,7 @@ assert!(json["null"].is_null());
 
 ### Generate JSON
 
-`stringify()` method can be used to create JSON string.
+`stringify()` and `format()` methods can be used to create JSON string. `stringify()` generates a minified JSON text and `format()` generates pretty JSON text with indentation.
 
 ```rust
 use tinyjson::JsonValue;
@@ -193,9 +193,11 @@ let s = r#"
 "#;
 
 let parsed: JsonValue = s.parse().unwrap();
-let str = parsed.stringify().unwrap();
-println!("{}", str);
+println!("{}", parsed.stringify().unwrap());
+println!("{}", parsed.format().unwrap());
 ```
+
+For writing JSON outputs to `io::Write` instance, `write_to()` and `format_to()` methods are also available.
 
 ## Examples
 
