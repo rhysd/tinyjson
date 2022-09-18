@@ -177,6 +177,24 @@ impl IndexMut<usize> for JsonValue {
     }
 }
 
+macro_rules! impl_from {
+    ($t:ty, $v:ident => $e:expr) => {
+        impl From<$t> for JsonValue {
+            fn from($v: $t) -> JsonValue {
+                use JsonValue::*;
+                $e
+            }
+        }
+    };
+}
+
+impl_from!(f64, n => Number(n));
+impl_from!(bool, b => Boolean(b));
+impl_from!(String, s => String(s));
+impl_from!((), _x => Null);
+impl_from!(Vec<JsonValue>, a => Array(a));
+impl_from!(HashMap<String, JsonValue>, o => Object(o));
+
 #[derive(Debug)]
 pub struct UnexpectedValue {
     value: JsonValue,

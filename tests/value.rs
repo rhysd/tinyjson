@@ -247,3 +247,24 @@ fn test_parse_format() {
         assert_eq!(output, expected);
     }
 }
+
+#[test]
+fn test_from() {
+    assert_eq!(JsonValue::from(1.2), JsonValue::Number(1.2));
+    assert_eq!(JsonValue::from(true), JsonValue::Boolean(true));
+    assert_eq!(JsonValue::from(()), JsonValue::Null);
+    let v = vec![JsonValue::Number(1.0), JsonValue::Boolean(false)];
+    assert_eq!(JsonValue::from(v.clone()), JsonValue::Array(v));
+    let m: HashMap<_, _> = [
+        ("a".to_string(), JsonValue::Number(1.0)),
+        ("b".to_string(), JsonValue::Boolean(false)),
+    ]
+    .into();
+    assert_eq!(JsonValue::from(m.clone()), JsonValue::Object(m.clone()));
+
+    fn kv(s: impl Into<String>, v: impl Into<JsonValue>) -> (String, JsonValue) {
+        (s.into(), v.into())
+    }
+    let o = JsonValue::Object([kv("a", 1.0), kv("b", false)].into());
+    assert_eq!(JsonValue::Object(m), o);
+}
