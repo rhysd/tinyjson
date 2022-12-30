@@ -32,7 +32,7 @@ jobs:
           rustup component add rustfmt clippy
           cargo fmt --version
           cargo clippy --version
-      - run: cargo fmt -- --color always --check
+      - run: cargo fmt --all -- --color always --check
       - run: cargo clippy --color always --all -- -D warnings
   examples:
     name: examples
