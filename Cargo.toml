@@ -25,3 +25,6 @@ maintenance = { status = "passively-maintained" }
 
 [dev-dependencies]
 walkdir = "2"
+
+[workspace]
+members = ["bench"]
