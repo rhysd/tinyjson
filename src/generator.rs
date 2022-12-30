@@ -40,18 +40,47 @@ impl<'indent, W: Write> JsonGenerator<'indent, W> {
     }
 
     fn quote(&mut self, s: &str) -> io::Result<()> {
+        const B: u8 = b'b'; // \x08
+        const T: u8 = b't'; // \x09
+        const N: u8 = b'n'; // \x0a
+        const F: u8 = b'f'; // \x0c
+        const R: u8 = b'r'; // \x0d
+        const Q: u8 = b'"'; // \x22
+        const S: u8 = b'\\'; // \x5c
+        const U: u8 = 1; // non-printable
+
+        #[rustfmt::skip]
+        const ESCAPE_TABLE: [u8; 256] = [
+         // 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F
+            U, U, U, U, U, U, U, U, B, T, N, U, F, R, U, U, // 0
+            U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, // 1
+            0, 0, Q, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 2
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 3
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 4
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, S, 0, 0, 0, // 5
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 6
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 7
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 8
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 9
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // A
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // B
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // C
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // D
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // E
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // F
+        ];
+
         self.out.write_all(b"\"")?;
         for c in s.chars() {
-            match c {
-                '\\' => self.out.write_all(b"\\\\")?,
-                '\u{0008}' => self.out.write_all(b"\\b")?,
-                '\u{000c}' => self.out.write_all(b"\\f")?,
-                '\n' => self.out.write_all(b"\\n")?,
-                '\r' => self.out.write_all(b"\\r")?,
-                '\t' => self.out.write_all(b"\\t")?,
-                '"' => self.out.write_all(b"\\\"")?,
-                c if c.is_control() => write!(self.out, "\\u{:04x}", c as u32)?,
-                c => write!(self.out, "{}", c)?,
+            let u = c as usize;
+            if u < 256 {
+                match ESCAPE_TABLE[u] {
+                    0 => self.out.write_all(&[c as u8])?,
+                    U => write!(self.out, "\\u{:04x}", u)?,
+                    b => self.out.write_all(&[b'\\', b])?,
+                }
+            } else {
+                write!(self.out, "{}", c)?
             }
         }
         self.out.write_all(b"\"")
