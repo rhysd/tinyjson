@@ -3,6 +3,8 @@ use std::collections::HashMap;
 use std::fmt;
 use std::io::{self, Write};
 
+/// Serialization error. This error only happens when some write error happens on writing the serialized byte sequence
+/// to the given `io::Write` object.
 #[derive(Debug)]
 pub struct JsonGenerateError {
     msg: String,
@@ -22,18 +24,52 @@ impl fmt::Display for JsonGenerateError {
 
 impl std::error::Error for JsonGenerateError {}
 
+/// Convenient type alias for serialization results.
 pub type JsonGenerateResult = Result<String, JsonGenerateError>;
 
+/// JSON serializer for `JsonValue`.
+///
+/// Basically you don't need to use this struct directly since `JsonValue::stringify` or `JsonValue::format` methods are
+/// using this internally.
+///
+/// ```
+/// use tinyjson::{JsonGenerator, JsonValue};
+///
+/// let v = JsonValue::from("hello, world".to_string());
+/// let mut buf = vec![];
+/// let mut gen = JsonGenerator::new(&mut buf);
+/// gen.generate(&v).unwrap();
+///
+/// assert_eq!(String::from_utf8(buf).unwrap(), "\"hello, world\"");
+/// ```
 pub struct JsonGenerator<'indent, W: Write> {
     out: W,
     indent: Option<&'indent str>,
 }
 
 impl<'indent, W: Write> JsonGenerator<'indent, W> {
+    /// Create a new `JsonGenerator` object. The serialized byte sequence will be written to the given `io::Write`
+    /// object.
     pub fn new(out: W) -> Self {
         Self { out, indent: None }
     }
 
+    /// Set indent string. This will be used by [`JsonGenerator::generate`].
+    /// ```
+    /// use tinyjson::{JsonGenerator, JsonValue};
+    ///
+    /// let v = JsonValue::from(vec![1.0.into(), 2.0.into(), 3.0.into()]);
+    /// let mut buf = vec![];
+    /// let mut gen = JsonGenerator::new(&mut buf).indent("        ");
+    /// gen.generate(&v).unwrap();
+    ///
+    /// assert_eq!(String::from_utf8(buf).unwrap(),
+    /// "[
+    ///         1,
+    ///         2,
+    ///         3
+    /// ]");
+    /// ```
     pub fn indent(mut self, indent: &'indent str) -> Self {
         self.indent = Some(indent);
         self
@@ -210,6 +246,32 @@ impl<'indent, W: Write> JsonGenerator<'indent, W> {
         }
     }
 
+    /// Serialize the `JsonValue` into UTF-8 byte sequence. The result will be written to the `io::Write` object passed
+    /// at [`JsonGenerator::new`].
+    /// This method serializes the value without indentation by default. But after setting an indent string via
+    /// [`JsonGenerator::indent`], this method will use the indent for elements of array and object.
+    ///
+    /// ```
+    /// use tinyjson::{JsonGenerator, JsonValue};
+    ///
+    /// let v = JsonValue::from(vec![1.0.into(), 2.0.into(), 3.0.into()]);
+    ///
+    /// let mut buf = vec![];
+    /// let mut gen = JsonGenerator::new(&mut buf);
+    /// gen.generate(&v).unwrap();
+    /// assert_eq!(String::from_utf8(buf).unwrap(), "[1,2,3]");
+    ///
+    /// let mut buf = vec![];
+    /// let mut gen = JsonGenerator::new(&mut buf).indent("  "); // with 2-spaces indent
+    /// gen.generate(&v).unwrap();
+    ///
+    /// assert_eq!(String::from_utf8(buf).unwrap(),
+    /// "[
+    ///   1,
+    ///   2,
+    ///   3
+    /// ]");
+    /// ```
     pub fn generate(&mut self, value: &JsonValue) -> io::Result<()> {
         if let Some(indent) = &self.indent {
             self.format(value, indent, 0)
@@ -219,6 +281,16 @@ impl<'indent, W: Write> JsonGenerator<'indent, W> {
     }
 }
 
+/// Serialize the given `JsonValue` value to `String` without indentation. This method is almost identical to
+/// `JsonValue::stringify` but exists for a historical reason.
+///
+/// ```
+/// use tinyjson::JsonValue;
+///
+/// let v = JsonValue::from(vec![1.0.into(), 2.0.into(), 3.0.into()]);
+/// let s = tinyjson::stringify(&v).unwrap();
+/// assert_eq!(s, "[1,2,3]");
+/// ```
 pub fn stringify(value: &JsonValue) -> JsonGenerateResult {
     let mut to = Vec::new();
     let mut gen = JsonGenerator::new(&mut to);
@@ -228,6 +300,16 @@ pub fn stringify(value: &JsonValue) -> JsonGenerateResult {
     Ok(String::from_utf8(to).unwrap())
 }
 
+/// Serialize the given `JsonValue` value to `String` with 2-spaces indentation. This method is almost identical to
+/// `JsonValue::format` but exists for a historical reason.
+///
+/// ```
+/// use tinyjson::JsonValue;
+///
+/// let v = JsonValue::from(vec![1.0.into(), 2.0.into(), 3.0.into()]);
+/// let s = tinyjson::format(&v).unwrap();
+/// assert_eq!(s, "[\n  1,\n  2,\n  3\n]");
+/// ```
 pub fn format(value: &JsonValue) -> JsonGenerateResult {
     let mut to = Vec::new();
     let mut gen = JsonGenerator::new(&mut to).indent("  ");

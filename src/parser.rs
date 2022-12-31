@@ -6,6 +6,13 @@ use std::str::FromStr;
 
 use crate::JsonValue;
 
+/// Parse error.
+///
+/// ```
+/// use tinyjson::{JsonParser, JsonParseError};
+/// let error = JsonParser::new("[1, 2, 3".chars()).parse().unwrap_err();
+/// assert!(matches!(error, JsonParseError{..}));
+/// ```
 #[derive(Debug)]
 pub struct JsonParseError {
     msg: String,
@@ -18,10 +25,24 @@ impl JsonParseError {
         JsonParseError { msg, line, col }
     }
 
+    /// Get the line numbr where the parse error happened. This value is 1-based.
+    ///
+    /// ```
+    /// use tinyjson::{JsonParser, JsonParseError};
+    /// let error = JsonParser::new("[1, 2, 3".chars()).parse().unwrap_err();
+    /// assert_eq!(error.line(), 1);
+    /// ```
     pub fn line(&self) -> usize {
         self.line
     }
 
+    /// Get the column numbr where the parse error happened. This value is 1-based.
+    ///
+    /// ```
+    /// use tinyjson::{JsonParser, JsonParseError};
+    /// let error = JsonParser::new("[1, 2, 3".chars()).parse().unwrap_err();
+    /// assert_eq!(error.column(), 8);
+    /// ```
     pub fn column(&self) -> usize {
         self.col
     }
@@ -39,6 +60,7 @@ impl fmt::Display for JsonParseError {
 
 impl std::error::Error for JsonParseError {}
 
+/// Convenient type alias for parse results.
 pub type JsonParseResult = Result<JsonValue, JsonParseError>;
 
 // Note: char::is_ascii_whitespace is not available because some characters are not defined as
@@ -51,6 +73,19 @@ fn is_whitespace(c: char) -> bool {
     }
 }
 
+/// JSON parser to parse UTF-8 string into `JsonValue` value.
+///
+/// Basically you don't need to use this struct directly thanks to `FromStr` trait implementation.
+///
+/// ```
+/// use tinyjson::{JsonParser, JsonValue};
+///
+/// let mut parser = JsonParser::new("[1, 2, 3]".chars());
+/// let array = parser.parse().unwrap();
+///
+/// // Equivalent to the above code using `FromStr`
+/// let array: JsonValue = "[1, 2, 3]".parse().unwrap();
+/// ```
 pub struct JsonParser<I>
 where
     I: Iterator<Item = char>,
@@ -61,6 +96,8 @@ where
 }
 
 impl<I: Iterator<Item = char>> JsonParser<I> {
+    /// Create a new parser instance from an iterator which iterates characters. The iterator is usually built from
+    /// `str::chars` for parsing `str` or `String` values.
     pub fn new(it: I) -> Self {
         JsonParser {
             chars: it.peekable(),
@@ -400,6 +437,7 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
         }
     }
 
+    /// Run the parser to parse one JSON value.
     pub fn parse(&mut self) -> JsonParseResult {
         let v = self.parse_any()?;
 
@@ -414,6 +452,15 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
     }
 }
 
+/// Parse given `str` object into `JsonValue` value. This is recommended way to parse strings into JSON value with
+/// this library.
+///
+/// ```
+/// use tinyjson::JsonValue;
+///
+/// let array: JsonValue = "[1, 2, 3]".parse().unwrap();
+/// assert!(array.is_array());
+/// ```
 impl FromStr for JsonValue {
     type Err = JsonParseError;
 
