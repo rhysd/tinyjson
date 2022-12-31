@@ -1,5 +1,8 @@
 name: CI
 on: [push, pull_request]
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
 
 jobs:
   unit-test:
@@ -10,44 +13,26 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
-      - name: Install Rust toolchain
-        run: |
-          rustup set profile minimal
-          rustup update stable
-          rustup default stable
-          rustc --version
-          cargo --version
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
       - name: Run tests
-        env:
-          RUST_BACKTRACE: 1
         run: cargo test --color always --all
   linter:
     name: clippy and rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Install tools
-        run: |
-          rustup component add rustfmt clippy
-          cargo fmt --version
-          cargo clippy --version
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
       - run: cargo fmt --all -- --color always --check
       - run: cargo clippy --color always --all -- -D warnings
   examples:
     name: examples
-    strategy:
-      fail-fast: false
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Install Rust toolchain
-        run: |
-          rustup set profile minimal
-          rustup update stable
-          rustup default stable
-          rustc --version
-          cargo --version
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
       - name: Run parse example
         run: |
           ret="$(echo '{"hello": "world"}' | cargo run --example parse)"
@@ -63,5 +48,4 @@ jobs:
             exit 1
           fi
       - name: Run json_value example
-        run: |
-          cargo run --example json_value
+        run: cargo run --example json_value
