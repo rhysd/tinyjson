@@ -225,13 +225,13 @@ impl From<UnexpectedValue> for JsonValue {
     }
 }
 
-macro_rules! impl_try_into {
+macro_rules! impl_try_from {
     ($ty:ty, $pat:pat => $val:expr) => {
-        impl TryInto<$ty> for JsonValue {
+        impl TryFrom<JsonValue> for $ty {
             type Error = UnexpectedValue;
 
-            fn try_into(self) -> Result<$ty, UnexpectedValue> {
-                match self {
+            fn try_from(v: JsonValue) -> Result<Self, UnexpectedValue> {
+                match v {
                     $pat => Ok($val),
                     v => Err(UnexpectedValue {
                         value: v,
@@ -243,9 +243,9 @@ macro_rules! impl_try_into {
     };
 }
 
-impl_try_into!(f64, JsonValue::Number(n) => n);
-impl_try_into!(bool, JsonValue::Boolean(b) => b);
-impl_try_into!(String, JsonValue::String(s) => s);
-impl_try_into!((), JsonValue::Null => ());
-impl_try_into!(Vec<JsonValue>, JsonValue::Array(a) => a);
-impl_try_into!(HashMap<String, JsonValue>, JsonValue::Object(o) => o);
+impl_try_from!(f64, JsonValue::Number(n) => n);
+impl_try_from!(bool, JsonValue::Boolean(b) => b);
+impl_try_from!(String, JsonValue::String(s) => s);
+impl_try_from!((), JsonValue::Null => ());
+impl_try_from!(Vec<JsonValue>, JsonValue::Array(a) => a);
+impl_try_from!(HashMap<String, JsonValue>, JsonValue::Object(o) => o);
