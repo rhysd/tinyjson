@@ -107,17 +107,27 @@ impl<'indent, W: Write> JsonGenerator<'indent, W> {
         ];
 
         self.out.write_all(b"\"")?;
-        for c in s.chars() {
+        let mut start = 0;
+        for (i, c) in s.char_indices() {
             let u = c as usize;
             if u < 256 {
-                match ESCAPE_TABLE[u] {
-                    0 => self.out.write_all(&[c as u8])?,
-                    U => write!(self.out, "\\u{:04x}", u)?,
-                    b => self.out.write_all(&[b'\\', b])?,
+                let esc = ESCAPE_TABLE[u];
+                if esc == 0 {
+                    continue;
                 }
-            } else {
-                write!(self.out, "{}", c)?
+                if start != i {
+                    self.out.write_all(s[start..i].as_bytes())?;
+                }
+                if esc == U {
+                    write!(self.out, "\\u{:04x}", u)?;
+                } else {
+                    self.out.write_all(&[b'\\', esc])?;
+                }
+                start = i + 1;
             }
+        }
+        if start != s.len() {
+            self.out.write_all(s[start..].as_bytes())?;
         }
         self.out.write_all(b"\"")
     }

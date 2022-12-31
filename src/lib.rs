@@ -75,6 +75,8 @@
 //! | Array   | `Vec<JsonValue>`             |
 //! | Object  | `HashMap<String, JsonValue>` |
 
+// This library is built with Safe Rust
+#![forbid(unsafe_code)]
 // Suppress warning which prefers `matches!` macro to `match` statement since the macro was
 // introduced in recent Rust 1.42. This library should support older Rust.
 #![allow(clippy::match_like_matches_macro)]
