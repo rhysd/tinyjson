@@ -44,7 +44,7 @@
 //!
 //! // Generate JSON string
 //! println!("{}", parsed.stringify().unwrap());
-//! // Generate formated JSON string with indent
+//! // Generate formatted JSON string with indent
 //! println!("{}", parsed.format().unwrap());
 //!
 //! // Convert to inner value represented with standard containers
@@ -62,7 +62,7 @@
 //! println!("{:?}", v["foo"]);
 //! ```
 //!
-//! Any JSON value is represented wiht [`JsonValue`] struct.
+//! Any JSON value is represented with [`JsonValue`] enum.
 //!
 //! Each JSON types are mapped to Rust types as follows:
 //!

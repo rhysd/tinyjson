@@ -64,7 +64,7 @@ println!("Parsed HashMap: {:?}", object);
 
 // Generate JSON string
 println!("{}", parsed.stringify().unwrap());
-// Generate formated JSON string with indent
+// Generate formatted JSON string with indent
 println!("{}", parsed.format().unwrap());
 
 // Convert to inner value represented with standard containers
