@@ -84,7 +84,9 @@
 mod generator;
 mod json_value;
 mod parser;
+mod query;
 
 pub use generator::*;
 pub use json_value::{InnerAsRef, InnerAsRefMut, JsonValue, UnexpectedValue};
 pub use parser::*;
+pub use query::{JsonQuery, JsonQueryMut};

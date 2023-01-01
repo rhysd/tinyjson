@@ -1,4 +1,5 @@
 use crate::generator::{format, stringify, JsonGenerateResult, JsonGenerator};
+use crate::query::{JsonQuery, JsonQueryMut};
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fmt;
@@ -323,6 +324,49 @@ impl JsonValue {
     pub fn format_to<W: io::Write>(&self, w: &mut W) -> io::Result<()> {
         JsonGenerator::new(w).indent("  ").generate(self)
     }
+
+    /// ```
+    /// use tinyjson::JsonValue;
+    ///
+    /// // Find some nested element
+    /// let v: JsonValue = r#"[{"foo": [false, true]}]"#.parse().unwrap();
+    /// let found = v.query().child(0).child("foo").child(1).find();
+    /// assert_eq!(found, Some(&JsonValue::from(true)));
+    ///
+    /// // Check if key or index exsits
+    /// assert!(v.query().child(0).child("foo").exists());
+    /// assert!(!v.query().child(1).exists());
+    /// assert!(!v.query().child("bar").exists());
+    ///
+    /// // Access nested inner value directly
+    /// let v: JsonValue = r#"[{"foo": ["first", "second"]}]"#.parse().unwrap();
+    /// let s: &String = v.query().child(0).child("foo").child(1).get().unwrap();
+    /// assert_eq!(s, "second");
+    /// ```
+    pub fn query(&self) -> JsonQuery<'_> {
+        JsonQuery::new(self)
+    }
+
+    /// ```
+    /// use tinyjson::JsonValue;
+    ///
+    /// // Modify nested JsonValue element
+    /// let mut v: JsonValue = r#"[{"foo": [true]}]"#.parse().unwrap();
+    /// if let Some(found) = v.query_mut().child(0).child("foo").child(0).find() {
+    ///     *found = JsonValue::Number(10.0);
+    /// }
+    /// assert_eq!(v.stringify().unwrap(), r#"[{"foo":[10]}]"#);
+    ///
+    /// // Modify nested inner value
+    /// let mut v: JsonValue = r#"[{"foo": ["hello"]}]"#.parse().unwrap();
+    /// if let Some(s) = v.query_mut().child(0).child("foo").child(0).get::<String>() {
+    ///     s.push_str(", world!");
+    /// }
+    /// assert_eq!(v.stringify().unwrap(), r#"[{"foo":["hello, world!"]}]"#);
+    /// ```
+    pub fn query_mut(&mut self) -> JsonQueryMut<'_> {
+        JsonQueryMut::new(self)
+    }
 }
 
 /// Access to value of the key of object.
@@ -373,7 +417,6 @@ impl JsonValue {
 /// let target_value: f64 = *json["foo"]["bar"][0]["target"].get().unwrap();
 /// assert_eq!(target_value, 42.0);
 /// ```
-
 impl<'a> Index<&'a str> for JsonValue {
     type Output = JsonValue;
 
