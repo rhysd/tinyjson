@@ -7,8 +7,31 @@ impl<'val> JsonQuery<'val> {
         Self(Some(v))
     }
 
-    pub fn child<I: QueryIndex>(&self, index: I) -> Self {
+    pub fn child<I: ChildIndex>(&self, index: I) -> Self {
         index.index(self)
+    }
+
+    /// ```
+    /// use tinyjson::JsonValue;
+    ///
+    /// let v: JsonValue = "[-1, 0, 1]".parse().unwrap();
+    ///
+    /// // Find element which is larger than zero
+    /// let num_greater_than_zero =
+    ///     v.query()
+    ///         .child_with(|v| matches!(v, JsonValue::Number(f) if *f > 0.0))
+    ///         .find();
+    /// assert_eq!(num_greater_than_zero, Some(&JsonValue::from(1.0)));
+    /// ```
+    pub fn child_with<F>(&self, mut predicate: F) -> Self
+    where
+        F: FnMut(&JsonValue) -> bool,
+    {
+        match &self.0 {
+            Some(JsonValue::Array(a)) => Self(a.iter().find(|v| predicate(v))),
+            Some(JsonValue::Object(o)) => Self(o.values().find(|v| predicate(v))),
+            _ => Self(None),
+        }
     }
 
     pub fn find(&self) -> Option<&'val JsonValue> {
@@ -31,8 +54,34 @@ impl<'val> JsonQueryMut<'val> {
         Self(Some(v))
     }
 
-    pub fn child<I: QueryIndex>(self, index: I) -> Self {
+    pub fn child<I: ChildIndex>(self, index: I) -> Self {
         index.index_mut(self)
+    }
+
+    /// ```
+    /// use tinyjson::JsonValue;
+    ///
+    /// let mut v: JsonValue = "[-1, 0, 1]".parse().unwrap();
+    ///
+    /// // Find a number greater than zero and modify the number
+    /// if let Some(num) =
+    ///     v.query_mut()
+    ///         .child_with(|v| matches!(v, JsonValue::Number(f) if *f > 0.0))
+    ///         .get::<f64>()
+    /// {
+    ///     *num *= 2.0;
+    /// }
+    /// assert_eq!(v.stringify().unwrap(), "[-1,0,2]");
+    /// ```
+    pub fn child_with<F>(self, mut predicate: F) -> Self
+    where
+        F: FnMut(&JsonValue) -> bool,
+    {
+        match self.0 {
+            Some(JsonValue::Array(a)) => Self(a.iter_mut().find(|v| predicate(v))),
+            Some(JsonValue::Object(o)) => Self(o.values_mut().find(|v| predicate(v))),
+            _ => Self(None),
+        }
     }
 
     pub fn find(self) -> Option<&'val mut JsonValue> {
@@ -48,12 +97,12 @@ impl<'val> JsonQueryMut<'val> {
     }
 }
 
-pub trait QueryIndex {
+pub trait ChildIndex {
     fn index<'a>(self, v: &JsonQuery<'a>) -> JsonQuery<'a>;
     fn index_mut(self, v: JsonQueryMut<'_>) -> JsonQueryMut<'_>;
 }
 
-impl<'key> QueryIndex for &'key str {
+impl<'key> ChildIndex for &'key str {
     fn index<'a>(self, v: &JsonQuery<'a>) -> JsonQuery<'a> {
         let inner = if let Some(JsonValue::Object(obj)) = v.0 {
             obj.get(self)
@@ -72,7 +121,7 @@ impl<'key> QueryIndex for &'key str {
     }
 }
 
-impl QueryIndex for usize {
+impl ChildIndex for usize {
     fn index<'a>(self, v: &JsonQuery<'a>) -> JsonQuery<'a> {
         let inner = if let Some(JsonValue::Array(arr)) = v.0 {
             arr.get(self)
