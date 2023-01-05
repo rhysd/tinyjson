@@ -165,7 +165,8 @@ impl JsonValue {
         JsonValue::Boolean(_),
     );
     is_xxx!(
-        /// Check if the inner value is a number.
+        /// Check if the inner value is a number. Note that [`matches!`] macro may fit better to your use case since it
+        /// allows to write `if` guard if you use Rust 1.42.0 or later.
         ///
         /// ```
         /// use tinyjson::JsonValue;
@@ -174,12 +175,17 @@ impl JsonValue {
         /// assert!(v.is_number());
         /// let v = JsonValue::from(false);
         /// assert!(!v.is_number());
+        ///
+        /// // matches! macro may be better choice
+        /// let v = JsonValue::from(-1.0);
+        /// assert!(matches!(&v, JsonValue::Number(n) if *n < 0.0));
         /// ```
         is_number,
         JsonValue::Number(_),
     );
     is_xxx!(
-        /// Check if the inner value is a string.
+        /// Check if the inner value is a string. Note that [`matches!`] macro may fit better to your use case since it
+        /// allows to write `if` guard if you use Rust 1.42.0 or later.
         ///
         /// ```
         /// use tinyjson::JsonValue;
@@ -188,6 +194,10 @@ impl JsonValue {
         /// assert!(v.is_string());
         /// let v = JsonValue::from(1.0);
         /// assert!(!v.is_string());
+        ///
+        /// // matches! macro may be better choice
+        /// let v = JsonValue::from("!".to_string());
+        /// assert!(matches!(&v, JsonValue::String(s) if !s.is_empty()));
         /// ```
         is_string,
         JsonValue::String(_),
@@ -207,7 +217,8 @@ impl JsonValue {
         JsonValue::Null,
     );
     is_xxx!(
-        /// Check if the inner value is an array.
+        /// Check if the inner value is an array. Note that [`matches!`] macro may fit better to your use case since it
+        /// allows to write `if` guard if you use Rust 1.42.0 or later.
         ///
         /// ```
         /// use tinyjson::JsonValue;
@@ -216,12 +227,17 @@ impl JsonValue {
         /// assert!(v.is_array());
         /// let v = JsonValue::from(1.0);
         /// assert!(!v.is_array());
+        ///
+        /// // matches! macro may be better choice
+        /// let v = JsonValue::from(vec![1.0.into()]);
+        /// assert!(matches!(&v, JsonValue::Array(a) if !a.is_empty()));
         /// ```
         is_array,
         JsonValue::Array(_),
     );
     is_xxx!(
-        /// Check if the inner value is an object.
+        /// Check if the inner value is an object. Note that [`matches!`] macro may fit better to your use case since it
+        /// allows to write `if` guard if you use Rust 1.42.0 or later.
         ///
         /// ```
         /// use tinyjson::JsonValue;
@@ -231,6 +247,13 @@ impl JsonValue {
         /// assert!(v.is_object());
         /// let v = JsonValue::from(vec![]);
         /// assert!(!v.is_object());
+        ///
+        /// // matches! macro may be better choice
+        /// let mut m = HashMap::new();
+        /// m.insert("hello".to_string(), "world".to_string().into());
+        /// let v = JsonValue::from(m);
+        /// assert!(matches!(&v, JsonValue::Object(o) if o.contains_key("hello")));
+        /// assert!(!matches!(&v, JsonValue::Object(o) if o.contains_key("goodbye")));
         /// ```
         is_object,
         JsonValue::Object(_),
