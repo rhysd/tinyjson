@@ -325,6 +325,14 @@ impl JsonValue {
         JsonGenerator::new(w).indent("  ").generate(self)
     }
 
+    /// Create a panic-safe JSON query for this value. It allows accessing the nested values by index/key/value
+    /// easily via immutable reference.
+    ///
+    /// - `.child()` for accessing its array or object elements by index or key
+    /// - `.child_by()` for accessing its array or object elements by a value predicate
+    ///
+    /// See [`JsonQuery`] for more details.
+    ///
     /// ```
     /// use tinyjson::JsonValue;
     ///
@@ -347,6 +355,14 @@ impl JsonValue {
         JsonQuery::new(self)
     }
 
+    /// Create a panic-safe JSON query for this value. It allows modifying the nested values by index/key/value
+    /// easily via mutable reference.
+    ///
+    /// - `.child()` for accessing its array or object elements by index or key
+    /// - `.child_by()` for accessing its array or object elements by a value predicate
+    ///
+    /// See [`JsonQueryMut`] for more details.
+    ///
     /// ```
     /// use tinyjson::JsonValue;
     ///
