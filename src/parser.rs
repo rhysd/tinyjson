@@ -86,7 +86,7 @@ fn is_whitespace(c: char) -> bool {
 fn eisel_lemire(mut man: u64, exp10: i32, neg: bool) -> Option<f64> {
     const POW10_MIN_EXP10: i32 = -348;
     const POW10_MAX_EXP10: i32 = 347;
-    const DETAILED_POWERS_OF_TEN: [(u64, u64); (-POW10_MIN_EXP10 + POW10_MAX_EXP10 + 1) as usize] = [
+    const POWERS_OF_TEN: [(u64, u64); (-POW10_MIN_EXP10 + POW10_MAX_EXP10 + 1) as usize] = [
         (0x1732c869cd60e453, 0xfa8fd5a0081c0288), // 1e-348
         (0x0e7fbd42205c8eb4, 0x9c99e58405118195), // 1e-347
         (0x521fac92a873b261, 0xc3c05ee50655e1fa), // 1e-346
@@ -837,9 +837,9 @@ fn eisel_lemire(mut man: u64, exp10: i32, neg: bool) -> Option<f64> {
 
     let clz = man.leading_zeros();
     man <<= clz;
-    let mut ret_exp2 = (((217706 * exp10) >> 16) + 64 + 1023) as u64 - clz as u64;
+    let mut ret_exp2 = ((((217706 * exp10) >> 16) + 64 + 1023) as u64).wrapping_sub(clz as u64);
 
-    let (pow_of_10_lo, pow_of_10_hi) = DETAILED_POWERS_OF_TEN[(exp10 - POW10_MIN_EXP10) as usize];
+    let (pow_of_10_lo, pow_of_10_hi) = POWERS_OF_TEN[(exp10 - POW10_MIN_EXP10) as usize];
 
     let (mut x_hi, mut x_lo) = mul(man, pow_of_10_hi);
 
@@ -1273,10 +1273,14 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
             }
         }
 
-        todo!(
-            "slow path to parse float number: ambiguous half-way: {:?}",
-            (mantissa, exponent)
-        )
+        let mut f = mantissa as f64;
+        let delta = if exponent < 0 { 0.1 } else { 10.0 };
+        for _ in 0..exponent.abs() {
+            f *= delta;
+        }
+        Ok(JsonValue::Number(f))
+        //     (mantissa as f64) * 10.0f64.powi(exponent),
+        // ))
     }
 
     fn parse_any(&mut self) -> JsonParseResult {
