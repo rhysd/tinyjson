@@ -1,4 +1,5 @@
 use crate::generator::{format, stringify, JsonGenerateResult, JsonGenerator};
+use crate::query::{JsonQuery, JsonQueryMut};
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fmt;
@@ -323,9 +324,68 @@ impl JsonValue {
     pub fn format_to<W: io::Write>(&self, w: &mut W) -> io::Result<()> {
         JsonGenerator::new(w).indent("  ").generate(self)
     }
+
+    /// Create a panic-safe JSON query for this value. It allows accessing the nested values by index/key/value
+    /// easily via immutable reference.
+    ///
+    /// - `.child()` for accessing its array or object elements by index or key
+    /// - `.child_by()` for accessing its array or object elements by a value predicate
+    ///
+    /// See [`JsonQuery`] for more details.
+    ///
+    /// ```
+    /// use tinyjson::JsonValue;
+    ///
+    /// // Find some nested element
+    /// let v: JsonValue = r#"[{"foo": [false, true]}]"#.parse().unwrap();
+    /// let found = v.query().child(0).child("foo").child(1).find();
+    /// assert_eq!(found, Some(&JsonValue::from(true)));
+    ///
+    /// // Check if key or index exsits
+    /// assert!(v.query().child(0).child("foo").exists());
+    /// assert!(!v.query().child(1).exists());
+    /// assert!(!v.query().child("bar").exists());
+    ///
+    /// // Access nested inner value directly
+    /// let v: JsonValue = r#"[{"foo": ["first", "second"]}]"#.parse().unwrap();
+    /// let s: &String = v.query().child(0).child("foo").child(1).get().unwrap();
+    /// assert_eq!(s, "second");
+    /// ```
+    pub fn query(&self) -> JsonQuery<'_> {
+        JsonQuery::new(self)
+    }
+
+    /// Create a panic-safe JSON query for this value. It allows modifying the nested values by index/key/value
+    /// easily via mutable reference.
+    ///
+    /// - `.child()` for accessing its array or object elements by index or key
+    /// - `.child_by()` for accessing its array or object elements by a value predicate
+    ///
+    /// See [`JsonQueryMut`] for more details.
+    ///
+    /// ```
+    /// use tinyjson::JsonValue;
+    ///
+    /// // Modify nested JsonValue element
+    /// let mut v: JsonValue = r#"[{"foo": [true]}]"#.parse().unwrap();
+    /// if let Some(found) = v.query_mut().child(0).child("foo").child(0).find() {
+    ///     *found = JsonValue::Number(10.0);
+    /// }
+    /// assert_eq!(v.stringify().unwrap(), r#"[{"foo":[10]}]"#);
+    ///
+    /// // Modify nested inner value
+    /// let mut v: JsonValue = r#"[{"foo": ["hello"]}]"#.parse().unwrap();
+    /// if let Some(s) = v.query_mut().child(0).child("foo").child(0).get::<String>() {
+    ///     s.push_str(", world!");
+    /// }
+    /// assert_eq!(v.stringify().unwrap(), r#"[{"foo":["hello, world!"]}]"#);
+    /// ```
+    pub fn query_mut(&mut self) -> JsonQueryMut<'_> {
+        JsonQueryMut::new(self)
+    }
 }
 
-/// Access to value of the key of object.
+/// Access the element value of the key of object.
 ///
 /// ```
 /// use tinyjson::JsonValue;
@@ -338,7 +398,7 @@ impl JsonValue {
 /// assert_eq!(i, &JsonValue::Number(1.0));
 /// ```
 ///
-///  This will panic when the given `JsonValue` value is not an object
+/// Like standard containers such as `Vec` or `HashMap`, it will panic when the given `JsonValue` value is not an object
 ///
 /// ```should_panic
 /// # use tinyjson::JsonValue;
@@ -373,7 +433,6 @@ impl JsonValue {
 /// let target_value: f64 = *json["foo"]["bar"][0]["target"].get().unwrap();
 /// assert_eq!(target_value, 42.0);
 /// ```
-
 impl<'a> Index<&'a str> for JsonValue {
     type Output = JsonValue;
 
@@ -393,7 +452,7 @@ impl<'a> Index<&'a str> for JsonValue {
     }
 }
 
-/// Access to value of the index of array.
+/// Access the element value of the index of array.
 ///
 /// ```
 /// use tinyjson::JsonValue;
@@ -403,7 +462,7 @@ impl<'a> Index<&'a str> for JsonValue {
 /// assert_eq!(b, &JsonValue::Boolean(true));
 /// ```
 ///
-///  This will panic when the given `JsonValue` value is not an array
+/// Like standard containers such as `Vec` or `HashMap`, it will panic when the given `JsonValue` value is not an array
 ///
 /// ```should_panic
 /// # use tinyjson::JsonValue;
@@ -434,7 +493,7 @@ impl Index<usize> for JsonValue {
     }
 }
 
-/// Access to value of the key of mutable object.
+/// Access the element value of the key of mutable object.
 ///
 /// ```
 /// use tinyjson::JsonValue;
@@ -447,7 +506,7 @@ impl Index<usize> for JsonValue {
 /// assert_eq!(v["foo"], JsonValue::Number(3.14));
 /// ```
 ///
-///  This will panic when the given `JsonValue` value is not an object
+/// Like standard containers such as `Vec` or `HashMap`, it will panic when the given `JsonValue` value is not an object
 ///
 /// ```should_panic
 /// # use tinyjson::JsonValue;
@@ -500,7 +559,7 @@ impl<'a> IndexMut<&'a str> for JsonValue {
     }
 }
 
-/// Access to value of the index of mutable array.
+/// Access the element value of the index of mutable array.
 ///
 /// ```
 /// use tinyjson::JsonValue;
@@ -510,7 +569,7 @@ impl<'a> IndexMut<&'a str> for JsonValue {
 /// assert_eq!(b, &JsonValue::Boolean(true));
 /// ```
 ///
-///  This will panic when the given `JsonValue` value is not an array
+/// Like standard containers such as `Vec` or `HashMap`, it will panic when the given `JsonValue` value is not an array
 ///
 /// ```should_panic
 /// # use tinyjson::JsonValue;

@@ -67,6 +67,10 @@ println!("{}", parsed.stringify().unwrap());
 // Generate formatted JSON string with indent
 println!("{}", parsed.format().unwrap());
 
+// Access nested elements by .query() or .query_mut() without panic
+let elem = parsed.query().child("arr").child(1).find();
+println!("Second element of \"arr\": {:?}", elem);
+
 // Convert to inner value represented with standard containers
 let object: HashMap<_, _> = parsed.try_into().unwrap();
 println!("Converted into HashMap: {:?}", object);
@@ -76,7 +80,7 @@ let mut m = HashMap::new();
 m.insert("foo".to_string(), true.into());
 let mut v = JsonValue::from(m);
 
-// Access with `Index` and `IndexMut` operators quickly
+// Access with `Index` and `IndexMut` operators quickly (panic when no element)
 println!("{:?}", v["foo"]);
 v["foo"] = JsonValue::from("hello".to_string());
 println!("{:?}", v["foo"]);

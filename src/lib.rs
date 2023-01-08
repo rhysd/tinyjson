@@ -47,6 +47,10 @@
 //! // Generate formatted JSON string with indent
 //! println!("{}", parsed.format().unwrap());
 //!
+//! // Access nested elements by .query() or .query_mut() without panic
+//! let elem = parsed.query().child("arr").child(1).find();
+//! println!("Second element of \"arr\": {:?}", elem);
+//!
 //! // Convert to inner value represented with standard containers
 //! let object: HashMap<_, _> = parsed.try_into().unwrap();
 //! println!("Converted into HashMap: {:?}", object);
@@ -56,15 +60,13 @@
 //! m.insert("foo".to_string(), true.into());
 //! let mut v = JsonValue::from(m);
 //!
-//! // Access with `Index` and `IndexMut` operators quickly
+//! // Access with `Index` and `IndexMut` operators quickly (panic when no element)
 //! println!("{:?}", v["foo"]);
 //! v["foo"] = JsonValue::from("hello".to_string());
 //! println!("{:?}", v["foo"]);
 //! ```
 //!
-//! Any JSON value is represented with [`JsonValue`] enum.
-//!
-//! Each JSON types are mapped to Rust types as follows:
+//! Any JSON value is represented with [`JsonValue`] enum. Each JSON types are mapped to Rust types as follows:
 //!
 //! | JSON    | Rust                         |
 //! |---------|------------------------------|
@@ -74,6 +76,9 @@
 //! | Null    | `()`                         |
 //! | Array   | `Vec<JsonValue>`             |
 //! | Object  | `HashMap<String, JsonValue>` |
+//!
+//! Flexible query APIs are available to access nested elements easily without panic. See [`JsonQuery`] and
+//! [`JsonQueryMut`] for more details.
 
 // This library is built with Safe Rust
 #![forbid(unsafe_code)]
@@ -84,7 +89,9 @@
 mod generator;
 mod json_value;
 mod parser;
+mod query;
 
 pub use generator::*;
 pub use json_value::{InnerAsRef, InnerAsRefMut, JsonValue, UnexpectedValue};
 pub use parser::*;
+pub use query::{ChildIndex, JsonQuery, JsonQueryMut};
