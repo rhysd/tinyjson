@@ -385,7 +385,7 @@ impl JsonValue {
     }
 }
 
-/// Access to value of the key of object.
+/// Access the element value of the key of object.
 ///
 /// ```
 /// use tinyjson::JsonValue;
@@ -398,7 +398,7 @@ impl JsonValue {
 /// assert_eq!(i, &JsonValue::Number(1.0));
 /// ```
 ///
-///  This will panic when the given `JsonValue` value is not an object
+/// Like standard containers such as `Vec` or `HashMap`, it will panic when the given `JsonValue` value is not an object
 ///
 /// ```should_panic
 /// # use tinyjson::JsonValue;
@@ -452,7 +452,7 @@ impl<'a> Index<&'a str> for JsonValue {
     }
 }
 
-/// Access to value of the index of array.
+/// Access the element value of the index of array.
 ///
 /// ```
 /// use tinyjson::JsonValue;
@@ -462,7 +462,7 @@ impl<'a> Index<&'a str> for JsonValue {
 /// assert_eq!(b, &JsonValue::Boolean(true));
 /// ```
 ///
-///  This will panic when the given `JsonValue` value is not an array
+/// Like standard containers such as `Vec` or `HashMap`, it will panic when the given `JsonValue` value is not an array
 ///
 /// ```should_panic
 /// # use tinyjson::JsonValue;
@@ -493,7 +493,7 @@ impl Index<usize> for JsonValue {
     }
 }
 
-/// Access to value of the key of mutable object.
+/// Access the element value of the key of mutable object.
 ///
 /// ```
 /// use tinyjson::JsonValue;
@@ -506,7 +506,7 @@ impl Index<usize> for JsonValue {
 /// assert_eq!(v["foo"], JsonValue::Number(3.14));
 /// ```
 ///
-///  This will panic when the given `JsonValue` value is not an object
+/// Like standard containers such as `Vec` or `HashMap`, it will panic when the given `JsonValue` value is not an object
 ///
 /// ```should_panic
 /// # use tinyjson::JsonValue;
@@ -559,7 +559,7 @@ impl<'a> IndexMut<&'a str> for JsonValue {
     }
 }
 
-/// Access to value of the index of mutable array.
+/// Access the element value of the index of mutable array.
 ///
 /// ```
 /// use tinyjson::JsonValue;
@@ -569,7 +569,7 @@ impl<'a> IndexMut<&'a str> for JsonValue {
 /// assert_eq!(b, &JsonValue::Boolean(true));
 /// ```
 ///
-///  This will panic when the given `JsonValue` value is not an array
+/// Like standard containers such as `Vec` or `HashMap`, it will panic when the given `JsonValue` value is not an array
 ///
 /// ```should_panic
 /// # use tinyjson::JsonValue;

@@ -33,7 +33,7 @@ use crate::json_value::{InnerAsRef, InnerAsRefMut, JsonValue};
 /// let second: &() = array.child(1).get().unwrap();
 /// let third: &f64 = array.child(2).get().unwrap();
 /// ```
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct JsonQuery<'val>(Option<&'val JsonValue>);
 
 impl<'val> JsonQuery<'val> {
