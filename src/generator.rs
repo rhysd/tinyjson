@@ -75,7 +75,7 @@ impl<'indent, W: Write> JsonGenerator<'indent, W> {
         self
     }
 
-    fn quote(&mut self, s: &str) -> io::Result<()> {
+    fn encode_string(&mut self, s: &str) -> io::Result<()> {
         const B: u8 = b'b'; // \x08
         const T: u8 = b't'; // \x09
         const N: u8 = b'n'; // \x0a
@@ -132,7 +132,7 @@ impl<'indent, W: Write> JsonGenerator<'indent, W> {
         self.out.write_all(b"\"")
     }
 
-    fn number(&mut self, f: f64) -> io::Result<()> {
+    fn encode_number(&mut self, f: f64) -> io::Result<()> {
         if f.is_infinite() {
             Err(io::Error::new(
                 io::ErrorKind::Other,
@@ -171,7 +171,7 @@ impl<'indent, W: Write> JsonGenerator<'indent, W> {
             } else {
                 self.out.write_all(b",")?;
             }
-            self.quote(k)?;
+            self.encode_string(k)?;
             self.out.write_all(b":")?;
             self.encode(v)?;
         }
@@ -180,9 +180,9 @@ impl<'indent, W: Write> JsonGenerator<'indent, W> {
 
     fn encode(&mut self, value: &JsonValue) -> io::Result<()> {
         match value {
-            JsonValue::Number(n) => self.number(*n),
-            JsonValue::Boolean(b) => write!(self.out, "{}", *b),
-            JsonValue::String(s) => self.quote(s),
+            JsonValue::Number(n) => self.encode_number(*n),
+            JsonValue::Boolean(b) => self.out.write_all(if *b { b"true" } else { b"false" }),
+            JsonValue::String(s) => self.encode_string(s),
             JsonValue::Null => self.out.write_all(b"null"),
             JsonValue::Array(a) => self.encode_array(a),
             JsonValue::Object(o) => self.encode_object(o),
@@ -236,7 +236,7 @@ impl<'indent, W: Write> JsonGenerator<'indent, W> {
                 self.out.write_all(b",\n")?;
             }
             self.write_indent(indent, level + 1)?;
-            self.quote(k)?;
+            self.encode_string(k)?;
             self.out.write_all(b": ")?;
             self.format(v, indent, level + 1)?;
         }
@@ -247,9 +247,9 @@ impl<'indent, W: Write> JsonGenerator<'indent, W> {
 
     fn format(&mut self, value: &JsonValue, indent: &str, level: usize) -> io::Result<()> {
         match value {
-            JsonValue::Number(n) => self.number(*n),
-            JsonValue::Boolean(b) => write!(self.out, "{}", *b),
-            JsonValue::String(s) => self.quote(s),
+            JsonValue::Number(n) => self.encode_number(*n),
+            JsonValue::Boolean(b) => self.out.write_all(if *b { b"true" } else { b"false" }),
+            JsonValue::String(s) => self.encode_string(s),
             JsonValue::Null => self.out.write_all(b"null"),
             JsonValue::Array(a) => self.format_array(a, indent, level),
             JsonValue::Object(o) => self.format_object(o, indent, level),
