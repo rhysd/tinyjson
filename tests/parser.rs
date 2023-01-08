@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 use tinyjson::*;
 
-const STR_OK: &'static str = r#"
+const STR_OK: &str = r#"
           {
             "bool": true,
             "arr": [1, null, "test"],

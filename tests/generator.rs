@@ -6,7 +6,7 @@ use tinyjson::JsonValue;
 fn test_number() {
     assert_eq!(&JsonValue::Number(0.0).stringify().unwrap(), "0");
     assert_eq!(&JsonValue::Number(10.0).stringify().unwrap(), "10");
-    assert_eq!(&JsonValue::Number(3.14).stringify().unwrap(), "3.14");
+    assert_eq!(&JsonValue::Number(3.15).stringify().unwrap(), "3.15");
     assert_eq!(&JsonValue::Number(-10.0).stringify().unwrap(), "-10");
 }
 

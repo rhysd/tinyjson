@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 use tinyjson::*;
 
-const STR_OK: &'static str = r#"
+const STR_OK: &str = r#"
           {
             "bool": true,
             "arr": [1, null, "test"],
             "nested": {
               "blah": false,
-              "blahblah": 3.14
+              "blahblah": 3.15
             },
             "unicode": "\u2764"
           }
@@ -79,7 +79,7 @@ fn test_equality_edge_cases() {
 fn test_access_with_index_operator() {
     let parsed = STR_OK.parse::<JsonValue>().unwrap();
     assert_eq!(parsed["bool"], JsonValue::Boolean(true));
-    assert_eq!(parsed["nested"]["blahblah"], JsonValue::Number(3.14));
+    assert_eq!(parsed["nested"]["blahblah"], JsonValue::Number(3.15));
 }
 
 #[test]
@@ -119,7 +119,7 @@ fn test_access_not_exist_value() {
 #[test]
 fn test_get() {
     let parsed = STR_OK.parse::<JsonValue>().unwrap();
-    let ref v = parsed["nested"]["blah"];
+    let v = &parsed["nested"]["blah"];
     let b: &bool = v.get().expect("Expected boolean value");
     assert!(!b);
     let null = JsonValue::Null;
@@ -144,7 +144,7 @@ fn test_try_into() {
     assert_eq!(v, 1.0);
 
     let v: bool = JsonValue::Boolean(false).try_into().unwrap();
-    assert_eq!(v, false);
+    assert!(!v);
 
     let v: String = JsonValue::String("hello".to_string()).try_into().unwrap();
     assert_eq!(&v, "hello");
@@ -196,7 +196,7 @@ fn test_parse_stringify() {
         r#"[1,"aaa",true,null]"#,
         "[[[[]]]]",
         "1",
-        "3.14",
+        "3.15",
         "true",
         "false",
         "null",
@@ -230,7 +230,7 @@ fn test_parse_format() {
         ),
         ("[[[[]]]]", "[\n  [\n    [\n      []\n    ]\n  ]\n]"),
         ("1", "1"),
-        ("3.14", "3.14"),
+        ("3.15", "3.15"),
         ("true", "true"),
         ("false", "false"),
         ("null", "null"),

@@ -154,7 +154,7 @@ fn test_json_test_suite_implementation_defined() {
 fn test_json_test_suite_transform() {
     // These files contain weird structures and characters that parsers may understand differently
     for path in json_test_suite_paths("test_transform") {
-        if let Ok(json) = fs::read_to_string(&path) {
+        if let Ok(json) = fs::read_to_string(path) {
             let _: JsonParseResult = json.parse();
             // Both failure and success are acceptable, but should not crash
         }

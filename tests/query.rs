@@ -362,7 +362,7 @@ fn test_query_get() {
 
 #[test]
 fn test_query_exists() {
-    let mut v: JsonValue = "[0]".parse().unwrap();
+    let v: JsonValue = "[0]".parse().unwrap();
     assert!(v.query().exists());
     assert!(v.query().child(0).exists());
     assert!(!v.query().child(1).exists());
