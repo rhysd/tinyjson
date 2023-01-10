@@ -308,11 +308,11 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
         for c in s.chars() {
             match self.consume_no_skip() {
                 Ok(x) if x != c => {
-                    return Some(JsonParseError::new(
-                        format!("Unexpected character '{}' while parsing '{}'", c, s),
-                        self.line,
-                        self.col,
-                    ));
+                    let msg = format!(
+                        "Unexpected character '{}' while parsing '{}' of {:?}",
+                        x, c, s,
+                    );
+                    return Some(JsonParseError::new(msg, self.line, self.col));
                 }
                 Ok(_) => {}
                 Err(e) => return Some(e),
