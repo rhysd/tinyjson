@@ -59,6 +59,18 @@ fn test_number_success_edge_cases() {
     let n: f64 = parsed.try_into().unwrap();
     assert_eq!(n, 0.0);
 
+    let parsed: JsonValue = r#"-0"#.parse().unwrap();
+    let n: f64 = parsed.try_into().unwrap();
+    assert_eq!(n, -0.0);
+
+    let parsed: JsonValue = r#"0e0"#.parse().unwrap();
+    let n: f64 = parsed.try_into().unwrap();
+    assert_eq!(n, 0.0);
+
+    let parsed: JsonValue = r#"-0e-0"#.parse().unwrap();
+    let n: f64 = parsed.try_into().unwrap();
+    assert_eq!(n, -0.0);
+
     let parsed: JsonValue = r#"0e1"#.parse().unwrap();
     let n: f64 = parsed.try_into().unwrap();
     assert_eq!(n, 0.0);
@@ -99,5 +111,7 @@ fn test_number_failure_edge_cases() {
     let parsed: JsonParseResult = r#"- 1"#.parse();
     parsed.unwrap_err();
     let parsed: JsonParseResult = r#"-"#.parse();
+    parsed.unwrap_err();
+    let parsed: JsonParseResult = r#"+1"#.parse();
     parsed.unwrap_err();
 }

@@ -343,83 +343,67 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
     }
 
     fn parse_number(&mut self) -> JsonParseResult {
-        let neg = if self.peek()? == '-' {
+        let mut s = String::new();
+
+        if let Some('-') = self.chars.peek() {
             self.consume_no_skip().unwrap();
-            true
-        } else {
-            false
+            s.push('-');
         };
 
-        let mut s = String::new();
-        let mut saw_dot = false;
-        let mut saw_exp = false;
-
-        while let Some(d) = self.chars.peek() {
-            match d {
-                '0'..='9' => s.push(*d),
-                '.' => {
-                    saw_dot = true;
-                    break;
+        match self.consume_no_skip()? {
+            '0' => s.push('0'),
+            d @ '1'..='9' => {
+                s.push(d);
+                while let Some('0'..='9') = self.chars.peek() {
+                    s.push(self.consume_no_skip().unwrap());
                 }
-                'e' | 'E' => {
-                    saw_exp = true;
-                    break;
-                }
-                _ => break,
             }
-            self.consume_no_skip().unwrap();
-        }
-
-        if s.is_empty() {
-            return self.err("Integer part must not be empty in number literal".to_string());
-        }
-
-        if s.starts_with('0') && s.len() > 1 {
-            return self
-                .err("Integer part of number must not start with 0 except for '0'".to_string());
-        }
-
-        if saw_dot {
-            s.push(self.consume_no_skip().unwrap()); // eat '.'
-            while let Some(d) = self.chars.peek() {
-                match d {
-                    '0'..='9' => s.push(*d),
-                    'e' | 'E' => {
-                        saw_exp = true;
-                        break;
-                    }
-                    _ => break,
-                }
-                self.consume_no_skip().unwrap();
-            }
-            if s.ends_with('.') {
-                return self.err("Fraction part of number must not be empty".to_string());
+            c => {
+                let msg = format!("Expected '0'~'9' for integer part of number but got {}", c);
+                return self.err(msg);
             }
         }
 
-        if saw_exp {
-            s.push(self.consume_no_skip().unwrap()); // eat 'e' or 'E'
-            if let Some('+') | Some('-') = self.chars.peek() {
+        if let Some('.') = self.chars.peek() {
+            s.push(self.consume_no_skip().unwrap()); // Eat '.'
+
+            match self.consume_no_skip()? {
+                d @ '0'..='9' => s.push(d),
+                c => {
+                    let msg = format!("At least one digit must follow after '.' but got {}", c);
+                    return self.err(msg);
+                }
+            }
+
+            while let Some('0'..='9') = self.chars.peek() {
+                s.push(self.consume_no_skip().unwrap());
+            }
+        }
+
+        if let Some('e' | 'E') = self.chars.peek() {
+            s.push(self.consume_no_skip().unwrap()); // Eat 'e' or 'E'
+
+            if let Some('-' | '+') = self.chars.peek() {
                 s.push(self.consume_no_skip().unwrap());
             }
 
-            let mut saw_digit = false;
-            while let Some(d) = self.chars.peek() {
-                match d {
-                    '0'..='9' => s.push(*d),
-                    _ => break,
+            match self.consume_no_skip()? {
+                d @ '0'..='9' => s.push(d),
+                c => {
+                    return self.err(format!(
+                        "At least one digit must follow exponent part of number but got {}",
+                        c
+                    ));
                 }
-                saw_digit = true;
-                self.consume_no_skip().unwrap();
-            }
+            };
 
-            if !saw_digit {
-                return self.err("Exponent part must not be empty in number literal".to_string());
+            while let Some('0'..='9') = self.chars.peek() {
+                s.push(self.consume_no_skip().unwrap());
             }
         }
 
-        match s.parse::<f64>() {
-            Ok(n) => Ok(JsonValue::Number(if neg { -n } else { n })),
+        match s.parse() {
+            Ok(n) => Ok(JsonValue::Number(n)),
             Err(err) => self.err(format!("Invalid number literal '{}': {}", s, err)),
         }
     }
